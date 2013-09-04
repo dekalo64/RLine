@@ -1,0 +1,72 @@
+QDialog{
+	background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                   stop: 0 #e3e3e3, stop: 0.5 #FFFFFF,
+                                   stop: 0.51 #FFFFFF, stop: 1 #e3e3e3);
+}
+
+QDialog > QLabel#labelConnectionDataBase{
+    color: #515151;
+}
+
+QDialog > QLineEdit {
+     border: 1px solid #515151;
+     border-radius: 3px;
+     padding: 0 8px;
+     background: white;
+     selection-background-color: #787878;
+     min-height: 20px;
+}
+
+QDialog > QPushButton {
+    border: 1px solid #aaaaaa;
+    border-radius: 2px;
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                   stop: 0 #FFFFFF, stop: 0.5 #FFFFFF,
+                                   stop: 0.51 #FFFFFF, stop: 1 #e3e3e3);
+
+    color: #515151;
+    min-width: 80px;
+    min-height: 25px;
+}
+
+QDialog > QPushButton:pressed {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                   stop: 0 #e3e3e3, stop: 0.50 #FFFFFF,
+                                   stop: 0.51 #FFFFFF, stop: 1 #e3e3e3);
+    color: #515151;
+
+}
+
+QDialog > QPushButton:disabled {
+    border: 1px solid #aaaaaa;
+    border-radius: 2px;
+    background-color: #e3e3e3;
+}
+
+QDialog > QPushButton:flat {
+    border: none;
+}
+
+QDialog > QPushButton#buttonDatabaseConnect {
+    border: 1px solid #aaaaaa;
+    border-radius: 2px;
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                   stop: 0 #FFFFFF, stop: 0.6 #FFFFFF,
+                                   stop: 0.8 #d7eaf2, stop: 1 #a2dff5);
+
+    color: #515151;
+    min-width: 80px;
+    min-height: 25px;
+}
+
+QDialog > QPushButton#buttonDatabaseConnect:pressed {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                   stop: 0 #e3e3e3, stop: 0.50 #FFFFFF,
+                                   stop: 0.51 #FFFFFF, stop: 1 #e3e3e3);
+}
+
+QDialog > QPushButton#buttonDatabaseConnect:disabled {
+    border: 1px solid #aaaaaa;
+    border-radius: 2px;
+    background-color: #e3e3e3;
+}
