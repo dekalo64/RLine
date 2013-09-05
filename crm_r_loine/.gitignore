@@ -1,0 +1,32 @@
+#
+# U N T R A C K E D
+#
+
+#
+# extensions
+# ----------
+#
+*.~*
+*.bak
+*.$$$
+*.zip
+*.7z
+
+#
+# files
+# -----
+#
+Thumbs.db
+VL
+
+#
+# folders
+# -------
+#
+
+#
+# binaries
+# --------
+#
+*.exe
+*.dll

@@ -1,7 +1,7 @@
 QDialog{
-	background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                   stop: 0 #e3e3e3, stop: 0.5 #FFFFFF,
-                                   stop: 0.51 #FFFFFF, stop: 1 #e3e3e3);
+	 background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                 stop: 0 #E1E1E1, stop: 0.4 #DDDDDD,
+                                 stop: 0.5 #D8D8D8, stop: 1.0 #D3D3D3);
 }
 
 QDialog > QLabel#labelConnectionDataBase{
@@ -18,7 +18,7 @@ QDialog > QLineEdit {
 }
 
 QDialog > QPushButton {
-    border: 1px solid #aaaaaa;
+    border: 1px solid #515151;
     border-radius: 2px;
     background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
                                    stop: 0 #FFFFFF, stop: 0.5 #FFFFFF,
@@ -38,7 +38,7 @@ QDialog > QPushButton:pressed {
 }
 
 QDialog > QPushButton:disabled {
-    border: 1px solid #aaaaaa;
+    border: 1px solid #515151;
     border-radius: 2px;
     background-color: #e3e3e3;
 }
@@ -48,25 +48,27 @@ QDialog > QPushButton:flat {
 }
 
 QDialog > QPushButton#buttonDatabaseConnect {
-    border: 1px solid #aaaaaa;
+    border: 1px solid #515151;
     border-radius: 2px;
     background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                   stop: 0 #FFFFFF, stop: 0.6 #FFFFFF,
-                                   stop: 0.8 #d7eaf2, stop: 1 #a2dff5);
+                                   stop: 0 #68a44a, stop: 0.6 #68a44a,
+                                   stop: 0.8 #68a44a, stop: 1 #68a44a);
 
-    color: #515151;
+    color: #FFFFFF;
     min-width: 80px;
     min-height: 25px;
 }
 
 QDialog > QPushButton#buttonDatabaseConnect:pressed {
     background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                   stop: 0 #e3e3e3, stop: 0.50 #FFFFFF,
-                                   stop: 0.51 #FFFFFF, stop: 1 #e3e3e3);
+                                   stop: 0 #619945, stop: 0.50 #68a44a,
+                                   stop: 0.51 #68a44a, stop: 1 #619945);
+    color: #FFFFFF;
 }
 
 QDialog > QPushButton#buttonDatabaseConnect:disabled {
     border: 1px solid #aaaaaa;
     border-radius: 2px;
     background-color: #e3e3e3;
+    color: #515151;
 }

@@ -1,5 +1,7 @@
 QMainWindow::separator {
-     background: #C4C4C3;
+     	 background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                 stop: 0 #E1E1E1, stop: 0.4 #DDDDDD,
+                                 stop: 0.5 #D8D8D8, stop: 1.0 #D3D3D3);
      image: url(data/picture/additionally/splitter-handle.png);
      width: 10px;  
  }
@@ -11,12 +13,15 @@ QMdiSubWindow {
 }
 
 QDialog {
-	background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                   stop: 0 #e3e3e3, stop: 0.5 #FFFFFF,
-                                   stop: 0.51 #FFFFFF, stop: 1 #e3e3e3);
+	 background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                 stop: 0 #E1E1E1, stop: 0.4 #DDDDDD,
+                                 stop: 0.5 #D8D8D8, stop: 1.0 #D3D3D3);
 }
 
 QDockWidget {
+     background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                 stop: 0 #E1E1E1, stop: 0.4 #DDDDDD,
+                                 stop: 0.5 #D8D8D8, stop: 1.0 #D3D3D3);
      border: 1px solid;
      min-width: 65ex;
      font: bold;
@@ -27,14 +32,14 @@ QDockWidget {
 
 QDockWidget::title {
      text-align: center;
-     background: #C4C4C3;
+     background: #E1E1E1;
      padding-left: 5px;
 }
 
 QDockWidget > QFrame > QCommandLinkButton {
      background: #ebe9ed;
-     border: 0px solid #ebe9ed;
-     border-radius: 2px;
+     border: 0px solid #C4C4C3;
+     border-radius: 0px;
 
      font-family: Arial;
 
@@ -43,7 +48,13 @@ QDockWidget > QFrame > QCommandLinkButton {
 }
 
 QDockWidget > QFrame > QCommandLinkButton:hover {
-     border: 1px solid #aaaaaa;
+     background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0,
+                                   stop: 0 #515151, stop: 0.025 #515151,
+                                   stop: 0.026 #68a44a, stop: 1 #68a44a);
+}
+
+QDockWidget > QFrame{ 
+     background: #ebe9ed;
 }
 
 QMenuBar {
@@ -63,8 +74,7 @@ QMenuBar::item {
 }
 
 QMenuBar::item:selected {
-     background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                   stop: 0 #787878, stop: 1 #7f7f7f);
+     background: #515151;
      color: #ffffff;								
 }
 
@@ -84,8 +94,8 @@ QMenu::item {
 }
 
 QMenu::item:selected {
-	 color: #ffffff;
-	 background-color: #7f7f7f;
+     color: #ffffff;
+     background-color: #68a44a;
      border-color: #ffffff;
 }
 
@@ -134,9 +144,9 @@ QTabBar::tab {
      min-width: 30ex;
      min-height: 5ex;
      padding: 3px;
-	 font: bold;
-	 color: #515151;
-	 font-family: Arial;
+     font: bold;
+     color: #515151;
+     font-family: Arial;
 }
 
 QTabBar::tab:selected, QTabBar::tab:hover {
@@ -241,22 +251,22 @@ QTreeView::item:hover {
 }
 
 QTreeView::item:selected {
-     border: 1px solid #787878;
+     border: 1px solid #515151;
      color: #FFFFFF;
 }
 
 QTreeView::item:selected:active{
      background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                   stop: 0 #787878,  stop: 1 #787878);
+                                   stop: 0 #68a44a,  stop: 1 #68a44a);
 }
 
 QTreeView::item:selected:!active {
      background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                   stop: 0 #787878,  stop: 1 #787878);
+                                   stop: 0 #68a44a,  stop: 1 #68a44a);
 }
 
 QPushButton {
-    border: 1px solid #aaaaaa;
+    border: 1px solid #515151;
     border-radius: 2px;
     background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
                                    stop: 0 #FFFFFF, stop: 0.5 #FFFFFF,
@@ -276,7 +286,7 @@ QPushButton:pressed {
 }
 
 QPushButton:disabled {
-    border: 1px solid #aaaaaa;
+    border: 1px solid #515151;
     border-radius: 2px;
     background-color: #e3e3e3;
 }
@@ -286,25 +296,29 @@ QPushButton:flat {
 }
 
 QPushButton#buttonSave{
-    border: 1px solid #aaaaaa;
+    border: 1px solid #515151;
     border-radius: 2px;
     background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                   stop: 0 #FFFFFF, stop: 0.6 #FFFFFF,
-                                   stop: 0.8 #d7eaf2, stop: 1 #a2dff5);
-    color: #515151;
+                                   stop: 0 #68a44a, stop: 0.6 #68a44a,
+                                   stop: 0.8 #68a44a, stop: 1 #68a44a);
+
+    color: #FFFFFF;
     min-width: 80px;
+    min-height: 25px;
 }
 
 QPushButton#buttonSave:pressed {
     background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                   stop: 0 #e3e3e3, stop: 0.50 #FFFFFF,
-                                   stop: 0.51 #FFFFFF, stop: 1 #e3e3e3);
+                                   stop: 0 #619945, stop: 0.50 #68a44a,
+                                   stop: 0.51 #68a44a, stop: 1 #619945);
+    color: #FFFFFF;
 }
 
 QPushButton#buttonSave:disabled {
     border: 1px solid #aaaaaa;
     border-radius: 2px;
     background-color: #e3e3e3;
+    color: #515151;
 }
 
 QDialog > QToolButton:hover {
