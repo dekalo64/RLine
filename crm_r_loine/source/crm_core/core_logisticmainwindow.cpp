@@ -598,38 +598,38 @@ void LogisticMainWindow::slotActualDocumentsView()
 
         if ( LogisticApplication::instance()->positions != nullptr ){
             if (activeMdiWindow()->accessibleDescription() == LogisticApplication::instance()->positions->metaObject()->className()) {
-                execAction("slotSelectRecords", LogisticApplication::instance()->positions->actualRecords);
+                execAction("slotActualRecords", LogisticApplication::instance()->positions->actualRecords);
             }
         }
 
         if ( LogisticApplication::instance()->contractortype != nullptr ){
             if (activeMdiWindow()->accessibleDescription() == LogisticApplication::instance()->contractortype->metaObject()->className()) {
-                execAction("slotSelectRecords", LogisticApplication::instance()->contractortype->actualRecords);
+                execAction("slotActualRecords", LogisticApplication::instance()->contractortype->actualRecords);
             }
         }
 
 
         if ( LogisticApplication::instance()->tasktype != nullptr ) {
             if ( activeMdiWindow()->accessibleDescription() == LogisticApplication::instance()->tasktype->metaObject()->className() ) {
-                execAction("slotSelectRecords", LogisticApplication::instance()->tasktype->actualRecords);
+                execAction("slotActualRecords", LogisticApplication::instance()->tasktype->actualRecords);
             }
         }
 
         if ( LogisticApplication::instance()->status != nullptr ) {
             if ( activeMdiWindow()->accessibleDescription() == LogisticApplication::instance()->status->metaObject()->className() ) {
-                execAction("slotSelectRecords", LogisticApplication::instance()->status->actualRecords);
+                execAction("slotActualRecords", LogisticApplication::instance()->status->actualRecords);
             }
         }
 
         if ( LogisticApplication::instance()->priorities != nullptr ) {
             if ( activeMdiWindow()->accessibleDescription() == LogisticApplication::instance()->priorities->metaObject()->className() ) {
-                execAction("slotSelectRecords", LogisticApplication::instance()->priorities->actualRecords);
+                execAction("slotActualRecords", LogisticApplication::instance()->priorities->actualRecords);
             }
         }
 
         if ( LogisticApplication::instance()->countryandcity != nullptr ) {
             if ( activeMdiWindow()->accessibleDescription() == LogisticApplication::instance()->countryandcity->metaObject()->className() ) {
-                execAction("slotSelectRecords", LogisticApplication::instance()->countryandcity->actualRecords);
+                execAction("slotActualRecords", LogisticApplication::instance()->countryandcity->actualRecords);
             }
         }
 

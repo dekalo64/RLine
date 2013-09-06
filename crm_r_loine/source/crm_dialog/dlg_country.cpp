@@ -4,8 +4,9 @@
 #include "source/crm_core/core_dictionarycore.h"
 
 CountryDialog::CountryDialog(QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::CountryDialog)
+    QDialog(parent)
+  , enableSave(false)
+  , ui(new Ui::CountryDialog)
 {
     setWindowFlags(Qt::Drawer);
     ui->setupUi(this);
@@ -28,6 +29,7 @@ CountryDialog::~CountryDialog()
 void CountryDialog::closeEvent(QCloseEvent *)
 {
     CDictionaryCore::clearEditDialog(this);
+    enableSave = false;
 }
 
 void CountryDialog::showEvent(QShowEvent *)
@@ -42,8 +44,8 @@ void CountryDialog::slotSaveDataChanged()
 
 void CountryDialog::updateActions()
 {
-    bool m_enableBtnConnect = (!ui->lineEditName->text().isEmpty() && !ui->lineEditNameEng->text().isEmpty() &&
-                              !ui->lineEditCityCode->text().isEmpty());
-    ui->buttonSave->setEnabled(m_enableBtnConnect);
+    ui->buttonSave->setEnabled(enableSave);
+    enableSave = (!ui->lineEditName->text().isEmpty() && !ui->lineEditNameEng->text().isEmpty() &&
+                  !ui->lineEditCityCode->text().isEmpty());
 }
 

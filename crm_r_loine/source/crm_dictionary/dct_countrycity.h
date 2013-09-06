@@ -50,7 +50,7 @@ class CCountryCity : public QWidget, public CDictionaryCore
 {
     Q_OBJECT
     Q_ENUMS(RecordActionDatabase::Enum)
-    
+
 public:
     explicit CCountryCity(QWidget *parent = 0);
     virtual ~CCountryCity();
@@ -69,15 +69,15 @@ private:
     void fillCountryModel (const QModelIndex &index, QSqlQuery &stored);
     void fillCityModel (QSqlQuery &stored);
     void columnHidden  (QTreeView *view, QStandardItemModel *model, const QVector<int> &vector);
-
-Q_SIGNALS:
-    void fillFormSelectedRecord (void);
+    bool fillFormSelectedRecord (void);
 
 private slots:
     void slotFillGroup  (const QModelIndex &index);
     void slotFillCities (const QModelIndex &index);
     void slotClearGroup (const QModelIndex &index);
 
+    void slotActualRecords (const bool &actual);
+    void slotFindCities             (const QString &text);
     void slotCutRecords             (void);
     void slotCopyRecords            (void);
     void slotPasteRecords           (void);
@@ -86,7 +86,6 @@ private slots:
     void slotRefreshRecordsCountry  (void);
     void slotRefreshRecordsCity     (void);
     void slotCreateEditDialog       (int r);
-    void slotFillFormSelectedRecord (void);
     void slotInsertOrUpdateRecords  (void);
 
 private:
