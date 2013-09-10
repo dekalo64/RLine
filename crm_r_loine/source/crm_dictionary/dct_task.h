@@ -14,9 +14,9 @@
 #include <QtSql/QSqlField>
 #include <QtSql/QSqlQuery>
 
-#define  MODEL_COLUMN_COUNT 5
+#define  TASK_MODEL_COLUMN_COUNT 3
 
-class TaskType : public DictionaryTemplate
+class TaskType : public CCppsst
 {
     Q_OBJECT
 
@@ -27,23 +27,23 @@ public:
     bool actualRecords;
 
 private:
-    QStandardItemModel    *m_model;
-    QSortFilterProxyModel *m_proxymodel;
-    QItemSelectionModel   *m_selectionModel;
+    QStandardItemModel    *modelTask;
+    QItemSelectionModel   *modelSelectionTask;
 
-    void fillingModel(QSqlQuery &stored);
+    void fillTaskModel(QSqlQuery &stored);
+    bool fillFormSelectedRecord (void);
 
 private slots:
+    void slotFillTask        (void);
+
+    void slotCreateEditDialog(const int &r);
+
+    void slotActualRecords (const bool &actual);
+    void slotFindTask(const QString &text);
     void slotInsertOrUpdateRecords (void);
-    void slotSelectRecords         (bool actual);
     void slotCopyRecords           (void);
     void slotDeleteRecords         (void);
     void slotRefreshRecords        (void);
-
-    void slotPushSelectRecordData(void);
-
-    void slotDataChanged         (const QModelIndex &index);
-    void slotGetSelectionModel   (const QModelIndex &index);
 };
 
 #endif // TASKTYPE_H

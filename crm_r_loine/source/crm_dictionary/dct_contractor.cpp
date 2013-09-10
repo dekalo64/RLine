@@ -3,121 +3,140 @@
 #include "source/crm_dictionary/dct_contractor.h"
 #include "source/crm_additionally/adl_communicate.h"
 
-#define  MODEL_COLUMN_COUNT 5
-
 QT_BEGIN_NAMESPACE
 class QCoreApplication;
 QT_END_NAMESPACE
 
 ContractorType::ContractorType(QWidget *parent /* = 0 */):
-    DictionaryTemplate(parent)
-  , actualRecords(true)
+    CCppsst(parent)
+  , actualRecords(false)
 {
-    m_model      = new QStandardItemModel(this);
 
-    m_proxyModel = new QSortFilterProxyModel(this);
-    m_proxyModel->setSourceModel(m_model);
-    m_proxyModel->setFilterKeyColumn(1);
-    m_proxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
+// model
+    modelContractor = new QStandardItemModel(this);
+    modelSelectionContractor  = new QItemSelectionModel(modelContractor);
 
-    m_selectionModel  = new QItemSelectionModel(m_proxyModel);
+    treeViewCppsst->setRootIsDecorated(false);
+    treeViewCppsst->setAlternatingRowColors(true);
+    treeViewCppsst->setModel(modelContractor);
+    treeViewCppsst->setSelectionModel(modelSelectionContractor);
 
-    treeView->setRootIsDecorated(false);
-    treeView->setAlternatingRowColors(true);
-    treeView->setModel(m_proxyModel);
-    treeView->setSelectionModel(m_selectionModel);
+    modelContractor->insertColumns(0, CONTRACTOR_MODEL_COLUMN_COUNT);
+    modelContractor->setHeaderData(1, Qt::Horizontal, QObject::tr("Наименование"));
+    QVector<int> vector;
+    columnHidden(treeViewCppsst, modelContractor, vector << 0 << 2);
+                 vector.clear();
 
-    dictionaryDialog->ui->comboBoxIcon->setEnabled (false);
-    dictionaryDialog->ui->comboBoxIcon->setEditable(false);
+    cppsstDialog->ui->comboBoxIcon->setEnabled (false);
+    cppsstDialog->ui->comboBoxIcon->setEditable(false);
 
-    ui->m_lblCurrentUser->setText(QString("Пользователь: <b><u>" + currentUser() + "</u></b>"));
+    ui->labelCurrentUser->setText(QString("Пользователь: <b><u>" + currentUser() + "</u></b>"));
 
-    connect(this, SIGNAL(pushSelectRecordData()), SLOT(slotPushSelectRecordData()));
-    connect(lineEditSearchToItem, SIGNAL(textEdited(QString)),
-            m_proxyModel, SLOT(setFilterWildcard(QString)));
-    connect(getClearButton(), SIGNAL(clicked()), SLOT(slotClearSearchToItem()));
-    connect(dictionaryDialog, SIGNAL(saveDataChanged()), this, SLOT(slotInsertOrUpdateRecords()));
-    connect(m_selectionModel, SIGNAL(currentRowChanged(QModelIndex,QModelIndex)),
-            this, SLOT(slotDataChanged(QModelIndex)));
-    connect(treeView, SIGNAL(clicked(QModelIndex)),
-            this, SLOT(slotDataChanged(QModelIndex)));
-    connect(this, SIGNAL(selectionModelIndex(QModelIndex)), SLOT(slotGetSelectionModel(QModelIndex)));
+    connect(cppsstDialog, SIGNAL(saveDataChanged()), this, SLOT(slotInsertOrUpdateRecords()));
+    connect(filter, SIGNAL(textChanged(QString)), SLOT(slotFindContractor(QString)));
 
-    slotSelectRecords(actualRecords);
+    slotFillContractor();
+
+    actualRecords
+           ? ui->labelViewState->setText(QString(tr("Отображаются записи: <b><u>Актуальные</u></b>")))
+           : ui->labelViewState->setText(QString(tr("Отображаются записи: <b><u>Все</u></b>")));
 }
 
 ContractorType::~ContractorType()
 {
-    if (IS_VALID_PTR(m_selectionModel)) { delete m_selectionModel; m_selectionModel  = nullptr; }
-    if (IS_VALID_PTR(m_proxyModel))     { delete m_proxyModel;     m_proxyModel      = nullptr; }
-    if (IS_VALID_PTR(m_model))          { delete m_model;          m_model           = nullptr; }
+    if (IS_VALID_PTR(modelSelectionContractor)) { delete modelSelectionContractor; modelSelectionContractor  = nullptr; }
+    if (IS_VALID_PTR(modelContractor))          { delete modelContractor;          modelContractor           = nullptr; }
 }
 
-void ContractorType::fillingModel(QSqlQuery &stored)
+void ContractorType::slotCreateEditDialog(const int &r)
 {
-    m_model->clear();
-    m_model->insertColumns(0, MODEL_COLUMN_COUNT);
-    m_model->insertRows(0, stored.numRowsAffected());
+    if (currentDatabase().isOpen()) {
 
-    unsigned  j(0);
-    QString   m_item;
+        r == 0  ? rad = RecordActionDatabase::ardInsert
+                : rad = RecordActionDatabase::ardUpdate;
 
-    unsigned ncols = stored.record().count();
+        cppsstDialog->setWindowTitle(QString("Контрагент"));
+
+        if (treeViewCppsst == focusWidget()){
+            if (rad == 0){
+                if (fillFormSelectedRecord()){
+                    cppsstDialog->show();
+                }
+            }else if (rad == 1){
+                if (fillFormSelectedRecord() && !modelSelectionContractor->selection().isEmpty()){
+                    cppsstDialog->show();
+                } else
+                    CCommunicate::showing(QString("Не удается выполнить, запись не выбрана"));
+            }
+        }else
+            CCommunicate::showing(QString("Не удается выполнить, таблица/запись не выбрана"));
+    } else
+        CCommunicate::showing(QString("Не удается выполнить, база данных не доступна"));
+}
+
+void ContractorType::fillContractorModel(QSqlQuery &stored)
+{
+    modelContractor->removeRows(0, modelContractor->rowCount(QModelIndex()), QModelIndex());
+    modelContractor->insertRows(stored.numRowsAffected(), 0);
+
 #ifndef QT_NO_CURSOR
-    QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
+    QApplication::setOverrideCursor(QCursor(QPixmap("data/picture/additionally/wait.png")));
 #endif
+
+    QString   it;
+    int ncols = stored.record().count();
+    int row(0);
+
     while(stored.next())
     {
-        for (unsigned i = 0; i != ncols; ++i){
-            if (stored.value(i).toDateTime().isValid()) {
-                m_item = stored.value(i).toDateTime().toString("yyyy-MM-dd hh:mm:ss");
-            } else {
-                m_item = stored.value(i).toString();
+        for (int i = 0; i != ncols; ++i){
+            it = stored.value(i).toString();
+            QStandardItem *item = new QStandardItem(it);
+            if (i == stored.record().indexOf("part_name")){
+                   item->setIcon(QIcon("data/picture/sidebar/contractortype.ico"));
             }
-            QStandardItem *item = new QStandardItem(m_item.trimmed());
-            if (i == 1){
-               item->setIcon(QIcon("data/picture/sidebar/contractortype.ico"));
-            }
-            m_model->setItem(j ,i, item);
+            modelContractor->setItem(row ,i, item);
         }
-        ++j;
+        ++row;
     }
+
 #ifndef QT_NO_CURSOR
     QApplication::restoreOverrideCursor();
 #endif
 }
 
-void ContractorType::slotSelectRecords(bool actual)
+void ContractorType::slotFillContractor(void)
 {
     QList<QVariant> list;
     QSqlQuery       stored;
 
 #ifndef QT_NO_CURSOR
-    QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
+    QApplication::setOverrideCursor(QCursor(QPixmap("data/picture/additionally/wait.png")));
 #endif
-    list.append((int)actual);
+
+    if (modelContractor->rowCount() > 0){
+        modelContractor->removeRows(0, modelContractor->rowCount());
+    }
+
+    list.append((int)actualRecords);
+    stored.setForwardOnly(true);
     stored = execStored(currentDatabase(), "ReadAllPartnerType", storageHashTable(list));
 
-    fillingModel(stored);
-    m_model->setHeaderData(1, Qt::Horizontal, QObject::tr("Наименование"));
+    fillContractorModel(stored);
 
-    for (int i = 0; i != m_model->columnCount(); ++i){
-        if (i == 1) {
-            continue;
-        } else {
-            treeView->setColumnHidden(i, true);
-        }
-    }
 #ifndef QT_NO_CURSOR
     QApplication::restoreOverrideCursor();
 #endif
     stored.finish();
+}
 
-    actual ? ui->m_lblViewState->setText(QString(tr("Отображаются записи: <b><u>Актуальные</u></b>")))
-           :
-             ui->m_lblViewState->setText(QString(tr("Отображаются записи: <b><u>Все</u></b>")));
-    m_selectedItem = false;
-    actualRecords = !actualRecords;
+void ContractorType::slotActualRecords(const bool &actual)
+{
+    actualRecords = !actual;
+    slotRefreshRecords();
+    actualRecords
+           ? ui->labelViewState->setText(QString(tr("Отображаются записи: <b><u>Актуальные</u></b>")))
+           : ui->labelViewState->setText(QString(tr("Отображаются записи: <b><u>Все</u></b>")));
 }
 
 void ContractorType::slotCopyRecords(void)
@@ -125,37 +144,37 @@ void ContractorType::slotCopyRecords(void)
     QList<QVariant> list;
     QSqlQuery       stored;
 
-    unsigned i(0);
-    unsigned m_code = m_selectionModel->currentIndex().sibling(m_selectionModel->currentIndex().row(), i).data(Qt::DisplayRole).toUInt();
+    if (currentDatabase().isOpen()) {
 
-    QString  m_name = m_selectionModel->currentIndex().data(Qt::DisplayRole).toString();
+        int code = modelSelectionContractor->currentIndex().sibling(modelSelectionContractor->currentIndex().row(), 0).data().toUInt();
 
-    if (m_selectionModel->isSelected(m_selectionModel->currentIndex())){
-        QMessageBox answer;
-                    answer.setText(QString(tr("Подтверждаете копирование <b>%1</b>?").arg(m_name)));
-                    answer.setWindowTitle(tr("Копирование"));
-                    answer.setIcon(QMessageBox::Question);
+        if (!modelSelectionContractor->selection().isEmpty()){
+            QMessageBox answer;
+                        answer.setText(QString("Подтверждаете копирование?"));
+                        answer.setWindowTitle("Копирование");
+                        answer.setIcon(QMessageBox::Question);
 
-        QPushButton *m_copy   = answer.addButton(QString(tr("Копировать")), QMessageBox::ActionRole);
-        QPushButton *m_cancel = answer.addButton(QString(tr("Отмена")),     QMessageBox::ActionRole);
+            QPushButton *copy   = answer.addButton(QString("Копировать"), QMessageBox::ActionRole);
+            QPushButton *cancel = answer.addButton(QString("Отмена"),     QMessageBox::ActionRole);
 
-        answer.exec();
+            answer.exec();
 
-        if (answer.clickedButton() == m_copy){
-            list.append(m_code);
-            stored = execStored(currentDatabase(), "CopyPartnerType", storageHashTable(list));
-            stored.finish();
+            if (answer.clickedButton() == copy){
+                list.append((int)code);
+                stored.setForwardOnly(true);
+                stored = execStored(currentDatabase(), "CopyPartnerType", storageHashTable(list));
+                stored.finish();
 
-            slotRefreshRecords();
+                slotRefreshRecords(); // refresh
 
-        } else if (answer.clickedButton() == m_cancel){
-            treeView->clearSelection();
-            answer.reject();
-        }
-    } else {
-        CCommunicate::showing(QString("Не удается копировать,\n запись не выбрана"));
-    }
-    m_selectedItem = false;
+            } else if (answer.clickedButton() == cancel){
+                treeViewCppsst->clearSelection();
+                answer.reject();
+            }
+        } else
+            CCommunicate::showing(QString("Не удается выполнить, запись не выбрана"));
+    } else
+        CCommunicate::showing(QString("Не удается выполнить, база данных не доступна"));
 }
 
 void ContractorType::slotDeleteRecords(void)
@@ -163,115 +182,73 @@ void ContractorType::slotDeleteRecords(void)
     QList<QVariant> list;
     QSqlQuery       stored;
 
-    unsigned i(0);
-    unsigned m_code = m_selectionModel->currentIndex().sibling(m_selectionModel->currentIndex().row(), i).data(Qt::DisplayRole).toUInt();
+    if (currentDatabase().isOpen()) {
 
-    QString  m_name = m_selectionModel->currentIndex().data(Qt::DisplayRole).toString();
+        int code = modelSelectionContractor->currentIndex().sibling(modelSelectionContractor->currentIndex().row(), 0).data().toUInt();
 
-    if (m_selectionModel->isSelected(m_selectionModel->currentIndex())){
-        QMessageBox answer;
-                    answer.setText(QString(tr("Подтверждаете удаление <b>%1</b>?").arg(m_name)));
-                    answer.setWindowTitle(QString(tr("Удаление")));
-                    answer.setIcon(QMessageBox::Question);
+        if (!modelSelectionContractor->selection().isEmpty()) {
+            QMessageBox answer;
+                        answer.setText(QString("Подтверждаете удаление?"));
+                        answer.setWindowTitle(QString("Удаление"));
+                        answer.setIcon(QMessageBox::Question);
 
-        QPushButton *m_delete = answer.addButton(QString(tr("Удалить")), QMessageBox::ActionRole);
-        QPushButton *m_cancel = answer.addButton(QString(tr("Отмена")),  QMessageBox::ActionRole);
+            QPushButton *_delete = answer.addButton(QString("Удалить"), QMessageBox::ActionRole);
+            QPushButton *cancel = answer.addButton(QString("Отмена"),  QMessageBox::ActionRole);
 
-        answer.exec();
+            answer.exec();
 
-        if (answer.clickedButton() == m_delete){
-            list.append(m_code);
-            stored = execStored(currentDatabase(), "DeletePartnerType", storageHashTable(list));
-            stored.finish();
+            if (answer.clickedButton() == _delete){
+                list.append((int)code);
+                stored.setForwardOnly(true);
+                stored = execStored(currentDatabase(), "DeletePartnerType", storageHashTable(list));
+                stored.finish();
 
-            slotRefreshRecords();
+                slotRefreshRecords(); // refresh
 
-        } else if (answer.clickedButton() == m_cancel){
-            treeView->clearSelection();
-            answer.reject();
-        }
-    } else {
-        CCommunicate::showing(QString("Не удается удалить,\n запись не выбрана"));
-    }
-    m_selectedItem = false;
+            } else if (answer.clickedButton() == cancel){
+                treeViewCppsst->clearSelection();
+                answer.reject();
+            }
+        } else
+            CCommunicate::showing(QString("Не удается выполнить, запись не выбрана"));
+    } else
+        CCommunicate::showing(QString("Не удается выполнить, база данных не доступна"));
 }
 
 void ContractorType::slotRefreshRecords()
 {
+    slotFillContractor();
+}
+
+bool ContractorType::fillFormSelectedRecord(void)
+{
     QList<QVariant> list;
     QSqlQuery       stored;
 
-#ifndef QT_NO_CURSOR
-    QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
-#endif
-    list.append(!actualRecords);
-    stored = execStored(currentDatabase(), "ReadAllPartnerType", storageHashTable(list));
+    if (rad == 0) {
+        cppsstDialog->ui->labelUserD->setText(QString("Нет данных"));
+        cppsstDialog->ui->labelDateD->setText(QString("Нет данных"));
+    } else if (rad == 1) {
 
-    fillingModel(stored);
-    m_model->setHeaderData(1, Qt::Horizontal, QObject::tr("Наименование"));
+        list.append(modelSelectionContractor->currentIndex().sibling(modelSelectionContractor->currentIndex().row(), 0).data().toUInt());
+        stored.setForwardOnly(true);
+        stored = execStored(currentDatabase(), "ReadOnePartnerType", storageHashTable(list));
 
-    for (int i = 0; i != m_model->columnCount(); ++i){
-        if (i == 1) {
-            continue;
+        if (stored.numRowsAffected() > 0) {
+            while (stored.next()) {
+                cppsstDialog->setWindowTitle(QString(cppsstDialog->windowTitle() + " - [ %1 ]").arg(stored.value(stored.record().indexOf("part_name")).toString()));
+                cppsstDialog->ui->lineEditName->setText(stored.value(stored.record().indexOf("part_name")).toString());
+                cppsstDialog->ui->checkBoxActual->setChecked(stored.value(stored.record().indexOf("part_actual")).toBool());
+                cppsstDialog->ui->labelUserD->setText(stored.value(stored.record().indexOf("part_muser")).toString());
+                cppsstDialog->ui->labelDateD->setText(stored.value(stored.record().indexOf("part_mdate")).toDateTime().toString("yyyy-MM-dd hh:mm:ss"));
+            }
         } else {
-            treeView->setColumnHidden(i, true);
+            CCommunicate::showing(QString("Не удается выполнить, документ либо его элемент был удален другим пользователем"));
+            return false;
         }
-    }
-#ifndef QT_NO_CURSOR
-    QApplication::restoreOverrideCursor();
-#endif
     stored.finish();
-}
-
-void ContractorType::slotPushSelectRecordData(void)
-{
-    QList<QVariant> list;
-    QSqlQuery       stored;
-    QString         userName;
-
-    if (m_rad == RecordActionDatabase::ardInsert) {
-        dictionaryDialog->ui->labelUserD->setText(currentUser());
-        dictionaryDialog->ui->labelDateD->setText(QString(tr("Не определено")).trimmed());
     }
-    else
-    if (m_rad == RecordActionDatabase::ardUpdate) {
-        unsigned i(1);
-        QString m_item = m_selectionModel->currentIndex().sibling(m_selectionModel->currentIndex().row(), i).data(Qt::DisplayRole).toString();
-        dictionaryDialog->setWindowTitle(QString(dictionaryDialog->windowTitle() + " запись - [ %1 ]").arg(m_item));
-        dictionaryDialog->ui->lineEditItem->setText(QString(m_item).trimmed());
-
-        unsigned c(2);
-        unsigned m_check = m_selectionModel->currentIndex().sibling(m_selectionModel->currentIndex().row(), c).data(Qt::DisplayRole).toUInt();
-        dictionaryDialog->ui->checkBoxActual->setChecked((bool)m_check);
-
-        unsigned u(3);
-        unsigned m_muser = m_selectionModel->currentIndex().sibling(m_selectionModel->currentIndex().row(), u).data(Qt::DisplayRole).toUInt();
-        list.append(m_muser);
-        stored = execStored(currentDatabase(), "ReadCurrentUser", storageHashTable(list));
-        while (stored.next()) {
-            userName = stored.record().field("opt_name_first").value().toString();
-        }
-        dictionaryDialog->ui->labelUserD->setText(userName);
-        stored.finish();
-
-        unsigned d(4);
-        QString m_mdate = m_selectionModel->currentIndex().sibling(m_selectionModel->currentIndex().row(), d).data(Qt::DisplayRole).toString();
-        dictionaryDialog->ui->labelDateD->setText(m_mdate);
-    }
-}
-
-void ContractorType::slotDataChanged(const QModelIndex &index)
-{
-    if (index.isValid()){
-        emit selectionModelIndex(index);
-    }
-}
-
-void ContractorType::slotGetSelectionModel(const QModelIndex &index)
-{
-    if (index.isValid()){
-        m_selectedItem = true;
-    }
+    return true;
 }
 
 void ContractorType::slotInsertOrUpdateRecords(void)
@@ -279,24 +256,46 @@ void ContractorType::slotInsertOrUpdateRecords(void)
     QList<QVariant> list;
     QSqlQuery       stored;
 
-    if (m_rad == RecordActionDatabase::ardInsert) {
-        list.append(dictionaryDialog->ui->lineEditItem->text());
-        list.append((int)dictionaryDialog->ui->checkBoxActual->isChecked());
+    if (rad == 0) {
+        list.append(cppsstDialog->ui->lineEditName->text());
+        list.append((int)cppsstDialog->ui->checkBoxActual->isChecked());
         stored = execStored(currentDatabase(), "InsertPartnerType", storageHashTable(list));
         stored.finish();
     }
-    else
-    if (m_rad == RecordActionDatabase::ardUpdate) {
-        unsigned i(0);
-        unsigned m_code = m_selectionModel->currentIndex().sibling(m_selectionModel->currentIndex().row(), i).data(Qt::DisplayRole).toUInt();
+    else if (rad == 1) {
+        int code = modelSelectionContractor->currentIndex().sibling(modelSelectionContractor->currentIndex().row(), 0).data().toUInt();
 
-        list.append(m_code);
-        list.append(dictionaryDialog->ui->lineEditItem->text());
-        list.append((int)(dictionaryDialog->ui->checkBoxActual->isChecked()));
+        list.append(code);
+        list.append(cppsstDialog->ui->lineEditName->text());
+        list.append((int)cppsstDialog->ui->checkBoxActual->isChecked());
         stored = execStored(currentDatabase(), "UpdatePartnerType", storageHashTable(list));
         stored.finish();
     }
     slotRefreshRecords();
-    clearEditDialog(dictionaryDialog);
-    m_selectedItem = false;
+    clearEditDialog(cppsstDialog);
+}
+
+
+void ContractorType::slotFindContractor(const QString &text)
+{
+    QList<QVariant> list;
+    QSqlQuery       stored;
+
+#ifndef QT_NO_CURSOR
+        QApplication::setOverrideCursor(QCursor(QPixmap("data/picture/additionally/wait.png")));
+#endif
+
+        list.append((int)actualRecords);
+        list.append(text);
+        stored.setForwardOnly(true);
+        stored = execStored(currentDatabase(), "FindPartnerType", storageHashTable(list));
+
+        if (stored.numRowsAffected() > 0) {
+            fillContractorModel(stored);
+        }
+
+#ifndef QT_NO_CURSOR
+        QApplication::restoreOverrideCursor();
+#endif
+        stored.finish();
 }

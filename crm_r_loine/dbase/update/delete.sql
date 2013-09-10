@@ -115,3 +115,39 @@ GO
 IF OBJECT_ID('[VL].dbo.UpdateTaskType', 'P') IS NOT NULL
  DROP PROCEDURE [dbo].[UpdateTaskType]
 GO
+
+IF OBJECT_ID('[VL].dbo.FindPartnerType', 'P') IS NOT NULL
+ DROP PROCEDURE [dbo].[FindPartnerType]
+GO
+
+IF OBJECT_ID('[VL].dbo.FindPriorityType', 'P') IS NOT NULL
+ DROP PROCEDURE [dbo].[FindPriorityType]
+GO
+
+IF OBJECT_ID('[VL].dbo.FindStatusType', 'P') IS NOT NULL
+ DROP PROCEDURE [dbo].[FindStatusType]
+GO
+
+IF OBJECT_ID('[VL].dbo.FindTaskType', 'P') IS NOT NULL
+ DROP PROCEDURE [dbo].[FindTaskType]
+GO
+
+IF OBJECT_ID('[VL].dbo.ReadOnePartnerType', 'P') IS NOT NULL
+ DROP PROCEDURE [dbo].[ReadOnePartnerType]
+GO
+
+IF OBJECT_ID('[VL].dbo.ReadOnePosition', 'P') IS NOT NULL
+ DROP PROCEDURE [dbo].[ReadOnePosition]
+GO
+
+IF OBJECT_ID('[VL].dbo.ReadOnePriorityType', 'P') IS NOT NULL
+ DROP PROCEDURE [dbo].[ReadOnePriorityType]
+GO
+
+IF OBJECT_ID('[VL].dbo.ReadOneStatusType', 'P') IS NOT NULL
+ DROP PROCEDURE [dbo].[ReadOneStatusType]
+GO
+
+IF OBJECT_ID('[VL].dbo.ReadOneTaskType', 'P') IS NOT NULL
+ DROP PROCEDURE [dbo].[ReadOneTaskType]
+GO

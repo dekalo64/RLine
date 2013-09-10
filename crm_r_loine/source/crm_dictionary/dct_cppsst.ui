@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>DictionaryTemplate</class>
- <widget class="QWidget" name="DictionaryTemplate">
+ <class>CCppsst</class>
+ <widget class="QWidget" name="CCppsst">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -35,7 +35,7 @@
    <item row="2" column="0" colspan="2">
     <layout class="QHBoxLayout" name="hLayoutInformation">
      <item alignment="Qt::AlignLeft|Qt::AlignBottom">
-      <widget class="QLabel" name="m_lblCurrentUser">
+      <widget class="QLabel" name="labelCurrentUser">
        <property name="font">
         <font>
          <family>Arial</family>
@@ -47,7 +47,7 @@
       </widget>
      </item>
      <item alignment="Qt::AlignRight|Qt::AlignBottom">
-      <widget class="QLabel" name="m_lblViewState">
+      <widget class="QLabel" name="labelViewState">
        <property name="font">
         <font>
          <family>Arial</family>

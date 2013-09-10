@@ -4,123 +4,56 @@
 #include "source/crm_dictionary/dct_cppsst.h"
 #include "source/crm_additionally/adl_communicate.h"
 
-DictionaryTemplate::DictionaryTemplate(QWidget *parent) :
+CCppsst::CCppsst(QWidget *parent) :
     QWidget(parent)
   , CDictionaryCore()
-  , ui   (new Ui::DictionaryTemplate)
-  , dictionaryDialog (new DictionaryDialog(this))
+  , ui   (new Ui::CCppsst)
+  , cppsstDialog (new CCppsstDialog(this))
 {
     ui->setupUi(this);
 
-    treeView = new TreeView(this);
-    treeView->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    treeView->header()->setVisible(true);
-    ui->vLayoutTreeView->addWidget(treeView);
+    treeViewCppsst = new CTreeViewCppsst(this);
+    treeViewCppsst->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    treeViewCppsst->header()->setVisible(true);
+    ui->vLayoutTreeView->addWidget(treeViewCppsst);
 
-    lineEditSearchToItem = new LineEdit(this);
-    lineEditSearchToItem->setPlaceholderText("Введите наименование");
-    ui->hLayoutSearchToItem->addWidget(lineEditSearchToItem);
+    filter = new CFilter(this);
+    filter->setObjectName("filter");
+    filter->setPlaceholderText("Введите наименование");
+    filter->installEventFilter(this);
+    filter->setValidator(new QRegExpValidator(QRegExp(trUtf8("[а-яА-Яa-zA-Z0-9_]+")), this));
+    ui->hLayoutSearchToItem->addWidget(filter);
 }
 
-DictionaryTemplate::~DictionaryTemplate()
+CCppsst::~CCppsst()
 {
-    if (IS_VALID_PTR(dictionaryDialog)) { delete dictionaryDialog; dictionaryDialog = nullptr; }
-    if (IS_VALID_PTR(ui))               { delete ui;  ui = nullptr; }
+    if (IS_VALID_PTR(cppsstDialog)) { delete cppsstDialog; cppsstDialog = nullptr; }
+    if (IS_VALID_PTR(ui))           { delete ui;           ui           = nullptr; }
 }
 
-QToolButton *DictionaryTemplate::getClearButton(void) const
+void CCppsst::columnHidden(QTreeView *view, QStandardItemModel *model, const QVector<int> &vector)
 {
-    return lineEditSearchToItem->clearButton;
-}
-
-void DictionaryTemplate::slotCreateEditDialog(int r)
-{
-    if (currentDatabase().isOpen()) {
-        switch (r) {
-        case 0:
-            dictionaryDialog->setWindowTitle(QString("Добавить"));
-            m_rad = RecordActionDatabase::ardInsert;
-            dictionaryDialog->ui->labelDateI->setText(QString(tr("Дата создания")));
-            break;
-        case 1:
-            dictionaryDialog->setWindowTitle(QString("Править"));
-            m_rad = RecordActionDatabase::ardUpdate;
-            dictionaryDialog->ui->labelDateI->setText(QString(tr("Дата редактирования")));
-            break;
-        default:
-            break;
+    QVector<int>::const_iterator it = vector.begin();
+    while(it != vector.end()){
+        for (int i = 0; i != model->columnCount(); ++i){
+            if (i == *it)
+                 view->setColumnHidden(i, true);
         }
-        if (!m_selectedItem && m_rad == RecordActionDatabase::ardUpdate){
-            CCommunicate::showing(QString("Не удается править,\n запись не выбрана"));
-            return;
-        } else {
-            dictionaryDialog->show();
-        }
-    emit pushSelectRecordData();
-   }
+        ++it;
+    }
 }
 
-void DictionaryTemplate::slotClearSearchToItem()
+void CCppsst::slotCreateEditDialog(const int &r)
 {
-    lineEditSearchToItem->undo();
-    lineEditSearchToItem->backspace();
+    Q_UNUSED(r);
 }
 
-LineEdit::LineEdit(QWidget *parent)
-   : QLineEdit(parent)
-{
-   clearButton = new QToolButton(this);
-   QPixmap pixmapClear("data/picture/additionally/clear-button.png");
-
-   searchButton = new QToolButton(this);
-   QPixmap pixmapSearch("data/picture/additionally/search.png");
-
-   clearButton->setIcon(QIcon(pixmapClear));
-   clearButton->setIconSize(pixmapClear.size());
-   clearButton->setCursor(Qt::PointingHandCursor);
-   clearButton->setStyleSheet("QToolButton { border: none; padding: 0px; }");
-   clearButton->hide();
-
-   searchButton->setIcon(QIcon(pixmapSearch));
-   searchButton->setIconSize(pixmapSearch.size());
-   searchButton->setStyleSheet("QToolButton { border: none; padding: 0px; }");
-
-   connect(this, SIGNAL(textChanged(const QString&)), SLOT(slotUpdateCloseButton(const QString&)));
-
-   int frameWidth = style()->pixelMetric(QStyle::PM_DefaultFrameWidth);
-   setStyleSheet(QString("QLineEdit { padding-right: %1px; } ").arg(clearButton->sizeHint().width() + frameWidth + 1));
-   setStyleSheet(QString("QLineEdit { padding-left: %1px; } ").arg(searchButton->sizeHint().width() + frameWidth + 1));
-   QSize msz = minimumSizeHint();
-   setMinimumSize(qMax(msz.width(), clearButton->sizeHint().height() + frameWidth * 2 + 2),
-                  qMax(msz.height(), clearButton->sizeHint().height() + frameWidth * 2 + 2));
-   setMinimumSize(qMax(msz.width(), searchButton->sizeHint().height() + frameWidth * 2 + 2),
-                  qMax(msz.height(), searchButton->sizeHint().height() + frameWidth * 2 + 2));
-}
-
-void LineEdit::resizeEvent(QResizeEvent *)
-{
-   QSize szClear = clearButton->sizeHint();
-   QSize szSearch = searchButton->sizeHint();
-   int frameWidth = style()->pixelMetric(QStyle::PM_DefaultFrameWidth);
-   clearButton->move(rect().right() - frameWidth - szClear.width(),
-                     (rect().bottom() + 1 - szClear.height()) / 2);
-   searchButton->move(rect().left() + 4,
-                     (rect().bottom() + 1 - szSearch.height()) / 2);
-}
-
-void LineEdit::slotUpdateCloseButton(const QString& text)
-{
-    clearButton->setVisible(!text.isEmpty());
-}
-
-
-TreeView::TreeView(QWidget *parent) :
+CTreeViewCppsst::CTreeViewCppsst(QWidget *parent) :
     QTreeView(parent)
 {
-    setAcceptDrops(true);
 }
 
-void TreeView::mousePressEvent(QMouseEvent *event)
+void CTreeViewCppsst::mousePressEvent(QMouseEvent *event)
 {
     if (event->buttons() == Qt::LeftButton){
        startPosition = event->pos();
@@ -128,7 +61,7 @@ void TreeView::mousePressEvent(QMouseEvent *event)
     QTreeView::mousePressEvent(event);
 }
 
-void TreeView::mouseMoveEvent(QMouseEvent *event)
+void CTreeViewCppsst::mouseMoveEvent(QMouseEvent *event)
 {
     if (event->buttons() == Qt::LeftButton){
         int distance = (event->pos() - startPosition).manhattanLength();
@@ -139,7 +72,7 @@ void TreeView::mouseMoveEvent(QMouseEvent *event)
     QTreeView::mouseMoveEvent(event);
 }
 
-void TreeView::dragEnterEvent(QDragEnterEvent *event)
+void CTreeViewCppsst::dragEnterEvent(QDragEnterEvent *event)
 {
     QLineEdit *source = qobject_cast<QLineEdit*>(event->source());
 
@@ -149,7 +82,7 @@ void TreeView::dragEnterEvent(QDragEnterEvent *event)
     }
 }
 
-void TreeView::dragMoveEvent(QDragMoveEvent *event)
+void CTreeViewCppsst::dragMoveEvent(QDragMoveEvent *event)
 {
     QLineEdit *source = qobject_cast<QLineEdit*>(event->source());
 
@@ -159,7 +92,7 @@ void TreeView::dragMoveEvent(QDragMoveEvent *event)
     }
 }
 
-void TreeView::dropEvent(QDropEvent *event)
+void CTreeViewCppsst::dropEvent(QDropEvent *event)
 {
     QLineEdit *source = qobject_cast<QLineEdit*>(event->source());
 
@@ -171,19 +104,16 @@ void TreeView::dropEvent(QDropEvent *event)
     }
 }
 
-void TreeView::draging()
+void CTreeViewCppsst::draging()
 {
     QModelIndex *item = new QModelIndex(currentIndex());
 
     if (item->isValid()){
          QMimeData *mimeData = new QMimeData;
-                    mimeData->setText(item->data(Qt::DisplayRole).toString());
+                    mimeData->setText(item->data().toString());
 
          QDrag *drag = new QDrag(this);
                 drag->setMimeData(mimeData);
                 drag->setPixmap(QPixmap("data/picture/additionally/dragdrop.png"));
-
-    if (drag->exec(Qt::MoveAction) == Qt::MoveAction)
-         delete item;
     }
 }

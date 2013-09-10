@@ -14,7 +14,9 @@
 #include <QtSql/QSqlField>
 #include <QtSql/QSqlQuery>
 
-class Positions : public DictionaryTemplate
+#define  POSITIONS_MODEL_COLUMN_COUNT 3
+
+class Positions : public CCppsst
 {
     Q_OBJECT
 
@@ -25,23 +27,23 @@ public:
     bool actualRecords;
 
 private:
-    QStandardItemModel    *m_model;
-    QSortFilterProxyModel *m_proxyModel;
-    QItemSelectionModel   *m_selectionModel;
+    QStandardItemModel    *modelPositions;
+    QItemSelectionModel   *modelSelectionPositions;
 
-    void fillingModel(QSqlQuery &stored);
+    void fillPositionsModel(QSqlQuery &stored);
+    bool fillFormSelectedRecord (void);
 
-public slots:
+private slots:
+    void slotFillPositions         (void);
+
+    void slotCreateEditDialog(const int &r);
+
+    void slotActualRecords (const bool &actual);
+    void slotFindPositions(const QString &text);
     void slotInsertOrUpdateRecords (void);
-    void slotSelectRecords         (bool actual);
     void slotCopyRecords           (void);
     void slotDeleteRecords         (void);
     void slotRefreshRecords        (void);
-
-    void slotPushSelectRecordData(void);
-
-    void slotDataChanged         (const QModelIndex &index);
-    void slotGetSelectionModel   (const QModelIndex &index);
 };
 
 #endif // POSITIONS_H
