@@ -152,7 +152,7 @@ bool CCountryCity::eventFilter(QObject *object, QEvent *event)
     return QWidget::eventFilter(object, event);
 }
 
-void CCountryCity::fillCountryModel(const QModelIndex &index, QSqlQuery &stored)
+void CCountryCity::fillCountryModel(QSqlQuery &stored, const QModelIndex &index)
 {
     modelCountry->insertRows(stored.numRowsAffected(), 0);
 
@@ -216,7 +216,7 @@ void CCountryCity::slotFillGroup(const QModelIndex &index)
     stored.setForwardOnly(true);
     stored = execStored(currentDatabase(), "ReadAllCountries", storageHashTable(list));
 
-    fillCountryModel(index, stored);
+    fillCountryModel(stored, index);
 
 #ifndef QT_NO_CURSOR
         QApplication::restoreOverrideCursor();
@@ -597,7 +597,7 @@ void CCountryCity::slotRefreshRecordsCity()
     slotFillCities(modelSelectionCountry->currentIndex());
 }
 
-void CCountryCity::slotCreateEditDialog(int r)
+void CCountryCity::slotCreateEditDialog(const int &r)
 {
     if (currentDatabase().isOpen()) {    
 
@@ -692,7 +692,7 @@ bool CCountryCity::fillFormSelectedRecord()
                     countryDialog->ui->lineEditCityCode->setText(stored.value(stored.record().indexOf("cty_phone_code")).toString());
                     countryDialog->ui->checkBoxActual->setChecked(stored.value(stored.record().indexOf("cty_actual")).toBool());
                     countryDialog->ui->labelUserD->setText(stored.value(stored.record().indexOf("cty_muser")).toString());
-                    countryDialog->ui->labelDateD->setText(stored.value(stored.record().indexOf("cty_mdate")).toString());
+                    countryDialog->ui->labelDateD->setText(stored.value(stored.record().indexOf("cty_mdate")).toDateTime().toString("yyyy-MM-dd hh:mm:ss"));
                 }
             } else {
                 CCommunicate::showing(QString("Не удается выполнить, документ либо его элемент был удален другим пользователем"));
@@ -730,7 +730,7 @@ bool CCountryCity::fillFormSelectedRecord()
                             cityDialog->ui->lineEditCountryCode->setText(stored.value(stored.record().indexOf("cty_phone_code")).toString());
                             cityDialog->ui->checkBoxActual->setChecked(stored.value(stored.record().indexOf("cit_actual")).toBool());
                             cityDialog->ui->labelUserD->setText(stored.value(stored.record().indexOf("cit_muser")).toString());
-                            cityDialog->ui->labelDateD->setText(stored.value(stored.record().indexOf("cit_mdate")).toString());
+                            cityDialog->ui->labelDateD->setText(stored.value(stored.record().indexOf("cit_mdate")).toDateTime().toString("yyyy-MM-dd hh:mm:ss"));
                         }
                     } else {
                         CCommunicate::showing(QString("Не удается выполнить, документ либо его элемент был удален другим пользователем"));

@@ -66,7 +66,7 @@ private:
     QItemSelectionModel   *modelSelectionCountry;
     QItemSelectionModel   *modelSelectionCity;
 
-    void fillCountryModel (const QModelIndex &index, QSqlQuery &stored);
+    void fillCountryModel (QSqlQuery &stored, const QModelIndex &index);
     void fillCityModel (QSqlQuery &stored);
     void columnHidden  (QTreeView *view, QStandardItemModel *model, const QVector<int> &vector);
     bool fillFormSelectedRecord (void);
@@ -85,7 +85,7 @@ private slots:
     void slotRefreshRecords         (void);
     void slotRefreshRecordsCountry  (void);
     void slotRefreshRecordsCity     (void);
-    void slotCreateEditDialog       (int r);
+    void slotCreateEditDialog       (const int &r);
     void slotInsertOrUpdateRecords  (void);
 
 private:
