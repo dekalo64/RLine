@@ -25,6 +25,8 @@ CCommunicate::CCommunicate(const QString &message)
 {
     setObjectName("CCommunicate");
 
+    setModal(true);
+
     setMaximumSize(QSize(280, 130));
     setMinimumSize(QSize(280, 130));
 
