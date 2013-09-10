@@ -192,6 +192,11 @@ QLineEdit {
      min-height: 20px;
 }
 
+QLineEdit:focus {
+     border: 1px solid;
+     border-color: #EE7621;
+}
+
 QListView {
      background-color: white;
      background-attachment: scroll;
@@ -397,9 +402,14 @@ QComboBox::down-arrow {
      image: url(data/picture/additionally/combobox-handle.png);
 }
 
-QComboBox::down-arrow:on
+QComboBox::down-arrow:on{
      top: 1px;
      left: 1px;
+}
+
+QComboBox:focus{  
+     border: 1px solid;
+     border-color: #EE7621;
 }
 
 QRadioButton::indicator {
