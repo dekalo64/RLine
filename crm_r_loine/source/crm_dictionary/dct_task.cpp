@@ -64,8 +64,10 @@ void TaskType::slotCreateEditDialog(const int &r)
                     cppsstDialog->show();
                 }
             }else if (rad == 1){
-                if (fillFormSelectedRecord() && !modelSelectionTask->selection().isEmpty()){
-                    cppsstDialog->show();
+                if (!modelSelectionTask->selection().isEmpty()){
+                    if (fillFormSelectedRecord()){
+                        cppsstDialog->show();
+                    }
                 } else
                     CCommunicate::showing(QString("Не удается выполнить, запись не выбрана"));
             }
