@@ -626,12 +626,12 @@ void CCountryCity::slotCreateEditDialog(const int &r)
                 }
             }
 
-//            if (focusedWidget->objectName() == treeViewCity->objectName()){
-//                if(modelSelectionCountry->selection().isEmpty()){
-//                    CCommunicate::showing(QString("Не удается выполнить, страна не выбрана"));
-//                    return;
-//                }
-//            }
+            if (focusedWidget->objectName() == treeViewCity->objectName()){
+                if(modelSelectionCountry->selection().isEmpty()){
+                    CCommunicate::showing(QString("Не удается выполнить, страна не выбрана"));
+                    return;
+                }
+            }
 
             if (focusedWidget->objectName() == treeViewCity->objectName()){
                 if (modelSelectionCountry->currentIndex() == root->index() && rad == 0){
@@ -678,7 +678,10 @@ bool CCountryCity::fillFormSelectedRecord()
     QSqlQuery       stored;
 
     if (focusedWidget->objectName() == treeViewCountry->objectName()){
-        if (rad == 1){
+        if (rad == 0){
+            countryDialog->ui->labelUserD->setText(QString("Нет данных"));
+            countryDialog->ui->labelDateD->setText(QString("Нет данных"));
+        } else if (rad == 1){
 
             list.append(modelSelectionCountry->currentIndex().sibling(modelSelectionCountry->currentIndex().row(), 1).data().toUInt());
             stored.setForwardOnly(true);
@@ -704,6 +707,9 @@ bool CCountryCity::fillFormSelectedRecord()
                     cityDialog->ui->lineEditCountry->setReadOnly(true);
 
             if (rad == 0){
+
+                cityDialog->ui->labelUserD->setText(QString("Нет данных"));
+                cityDialog->ui->labelDateD->setText(QString("Нет данных"));
 
                 list.append(modelSelectionCountry->currentIndex().sibling(modelSelectionCountry->currentIndex().row(), 1).data().toUInt());
                 stored.setForwardOnly(true);
