@@ -1,5 +1,5 @@
-#ifndef DICTIONARYEDIT_H
-#define DICTIONARYEDIT_H
+#ifndef CCPPSSTDIALOG_H
+#define CCPPSSTDIALOG_H
 
 #include "source/crm_core/core_logisticnamespace.h"
 
@@ -7,16 +7,16 @@
 #include <QtGui/QVBoxLayout>
 
 namespace Ui {
-class DictionaryDialog;
+class CCppsstDialog;
 }
 
-class DictionaryDialog : public QDialog
+class CCppsstDialog : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit DictionaryDialog(QWidget *parent = 0);
-    virtual ~DictionaryDialog();
+    explicit CCppsstDialog(QWidget *parent = 0);
+    virtual ~CCppsstDialog();
 
 protected:
     void closeEvent(QCloseEvent *);
@@ -31,9 +31,10 @@ private slots:
     
 private:
     void updateActions();
+    bool enableSave;
 
 public:
-    Ui::DictionaryDialog *ui;
+    Ui::CCppsstDialog *ui;
 };
 
-#endif // DICTIONARYEDIT_H
+#endif // CCPPSSTDIALOG_H

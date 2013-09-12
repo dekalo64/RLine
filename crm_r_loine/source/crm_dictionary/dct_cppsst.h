@@ -9,48 +9,64 @@
 #include "source/crm_core/core_logisticnamespace.h"
 #include "source/crm_dialog/dlg_cppsst.h"
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+#include <QtGlobal>
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+
+
+#include <QtGui/QStandardItemModel>
+#include <QWidget>
+#include <QTreeView>
+#include <QToolButton>
+#include <QStyle>
+#include <QLineEdit>
+
+#else
+
+
+=======
+>>>>>>> 7d34168ed62c3fc6f2c3e44c48dc517eb050ca29
+=======
+>>>>>>> parent of 4ea7787... Добавлено #if QT_VERSION для проверки с 5 версией
+#include <QtGui/QStandardItemModel>
 #include <QtGui/QWidget>
 #include <QtGui/QTreeView>
 #include <QtGui/QToolButton>
 #include <QtGui/QStyle>
 #include <QtGui/QLineEdit>
 
-class LineEdit;
-class TreeView;
+class CTreeViewCppsst;
 
-class DictionaryTemplate: public QWidget, public CDictionaryCore
+class CCppsst: public QWidget, public CDictionaryCore
 {
     Q_OBJECT
     Q_ENUMS(RecordActionDatabase::Enum)
 
 public:
-    explicit DictionaryTemplate(QWidget *parent = 0);
-    virtual ~DictionaryTemplate();
+    explicit CCppsst(QWidget *parent = 0);
+    virtual ~CCppsst();
 
-    QToolButton *getClearButton(void) const;
+    void columnHidden  (QTreeView *view, QStandardItemModel *model, const QVector<int> &vector);
 
-Q_SIGNALS:
-    void pushSelectRecordData(void);
-    void selectionModelIndex (const QModelIndex &index);
-
-public slots:
-    void slotCreateEditDialog(int r);
-    void slotClearSearchToItem();
+protected slots:
+    virtual void slotCreateEditDialog(const int &r) = 0; // abstract method
 
 public:
-    Ui::DictionaryTemplate      *ui;
-    TreeView                    *treeView;
-    DictionaryDialog            *dictionaryDialog;
-    LineEdit                    *lineEditSearchToItem;
-    RecordActionDatabase::Enum   m_rad;
-    bool                         m_selectedItem;
+    Ui::CCppsst                 *ui;
+    CTreeViewCppsst             *treeViewCppsst;
+    CCppsstDialog               *cppsstDialog;
+    CFilter                     *filter;
+
+    RecordActionDatabase::Enum   rad;
 };
 
-class TreeView : public QTreeView
+class CTreeViewCppsst : public QTreeView
 {
     Q_OBJECT
+
 public:
-    TreeView(QWidget *parent = 0);
+    CTreeViewCppsst(QWidget *parent = 0);
 
 protected:
     void mousePressEvent(QMouseEvent *event);
@@ -62,26 +78,6 @@ protected:
 private:
     void draging();
     QPoint startPosition;
-};
-
-class LineEdit : public QLineEdit
-{
-    Q_OBJECT
-
-public:
-    LineEdit(QWidget *parent = 0);
-
-protected:
-    void resizeEvent(QResizeEvent *);
-
-private slots:
-    void slotUpdateCloseButton(const QString &text);
-
-private:
-    friend QToolButton *DictionaryTemplate::getClearButton(void) const;
-
-    QToolButton *clearButton;
-    QToolButton *searchButton;
 };
 
 #endif // DICTIONARYTEMPLATE_H

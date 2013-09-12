@@ -227,7 +227,7 @@
      </property>
     </widget>
    </item>
-   <item row="0" column="0" alignment="Qt::AlignLeft">
+   <item row="0" column="0" alignment="Qt::AlignHCenter">
     <widget class="QLabel" name="labelWindowDescription">
      <property name="font">
       <font>

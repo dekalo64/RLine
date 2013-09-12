@@ -14,7 +14,9 @@
 #include <QtSql/QSqlField>
 #include <QtSql/QSqlQuery>
 
-class Priorities: public DictionaryTemplate
+#define  PRIORITIES_MODEL_COLUMN_COUNT 4
+
+class Priorities: public CCppsst
 {
     Q_OBJECT
 
@@ -25,23 +27,23 @@ public:
     bool actualRecords;
 
 private:
-    QStandardItemModel    *m_model;
-    QSortFilterProxyModel *m_proxymodel;
-    QItemSelectionModel   *m_selectionModel;
+    QStandardItemModel    *modelPriorities;
+    QItemSelectionModel   *modelSelectionPriorities;
 
-    void fillingModel(QSqlQuery &stored);
+    void fillPrioritiesModel(QSqlQuery &stored);
+    bool fillFormSelectedRecord (void);
 
 private slots:
+    void slotFillPriorities        (void);
+
+    void slotCreateEditDialog(const int &r);
+
+    void slotActualRecords (const bool &actual);
+    void slotFindPriorities(const QString &text);
     void slotInsertOrUpdateRecords (void);
-    void slotSelectRecords         (bool actual);
     void slotCopyRecords           (void);
     void slotDeleteRecords         (void);
     void slotRefreshRecords        (void);
-
-    void slotPushSelectRecordData(void);
-
-    void slotDataChanged         (const QModelIndex &index);
-    void slotGetSelectionModel   (const QModelIndex &index);
 };
 
 #endif // PRIORITIES_H

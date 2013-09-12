@@ -17,6 +17,7 @@ public:
 
 private:
     void updateActions();
+    bool enableSave;
 
 protected:
     void closeEvent(QCloseEvent *);

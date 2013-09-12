@@ -3,121 +3,106 @@
 #include "source/crm_dictionary/dct_positions.h"
 #include "source/crm_additionally/adl_communicate.h"
 
-#define  MODEL_COLUMN_COUNT 5
-
 QT_BEGIN_NAMESPACE
 class QCoreApplication;
 QT_END_NAMESPACE
 
 Positions::Positions(QWidget *parent /* = 0 */):
-    DictionaryTemplate(parent)
+    CCppsst(parent)
   , actualRecords(true)
 {
-    m_model      = new QStandardItemModel(this);
 
-    m_proxyModel = new QSortFilterProxyModel(this);
-    m_proxyModel->setSourceModel(m_model);
-    m_proxyModel->setFilterKeyColumn(1);
-    m_proxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
+// model
+    modelPositions      = new QStandardItemModel(this);
+    modelSelectionPositions  = new QItemSelectionModel(modelPositions);
 
-    m_selectionModel  = new QItemSelectionModel(m_proxyModel);
+    treeViewCppsst->setRootIsDecorated(false);
+    treeViewCppsst->setAlternatingRowColors(true);
+    treeViewCppsst->setModel(modelPositions);
+    treeViewCppsst->setSelectionModel(modelSelectionPositions);
 
-    treeView->setRootIsDecorated(false);
-    treeView->setAlternatingRowColors(true);
-    treeView->setModel(m_proxyModel);
-    treeView->setSelectionModel(m_selectionModel);
+    modelPositions->insertColumns(0, POSITIONS_MODEL_COLUMN_COUNT);
+    modelPositions->setHeaderData(1, Qt::Horizontal, QObject::tr("Наименование"));
+    QVector<int> vector;
+    columnHidden(treeViewCppsst, modelPositions, vector << 0 << 2);
+                 vector.clear();
 
-    dictionaryDialog->ui->comboBoxIcon->setEnabled (false);
-    dictionaryDialog->ui->comboBoxIcon->setEditable(false);
+    cppsstDialog->ui->comboBoxIcon->setEnabled (false);
+    cppsstDialog->ui->comboBoxIcon->setEditable(false);
 
-    ui->m_lblCurrentUser->setText(QString("Пользователь: <b><u>" + currentUser() + "</u></b>"));
+    ui->labelCurrentUser->setText(QString("Пользователь: <b><u>" + currentUser() + "</u></b>"));
 
-    connect(this, SIGNAL(pushSelectRecordData()), SLOT(slotPushSelectRecordData()));
-    connect(lineEditSearchToItem, SIGNAL(textChanged(QString)),
-            m_proxyModel, SLOT(setFilterWildcard(QString)));
-    connect(getClearButton(), SIGNAL(clicked()), SLOT(slotClearSearchToItem()));
-    connect(dictionaryDialog, SIGNAL(saveDataChanged()), this, SLOT(slotInsertOrUpdateRecords()));
-    connect(m_selectionModel, SIGNAL(currentRowChanged(QModelIndex,QModelIndex)),
-            this, SLOT(slotDataChanged(QModelIndex)));
-    connect(treeView, SIGNAL(clicked(QModelIndex)),
-            this, SLOT(slotDataChanged(QModelIndex)));
-    connect(this, SIGNAL(selectionModelIndex(QModelIndex)), SLOT(slotGetSelectionModel(QModelIndex)));
+    connect(cppsstDialog, SIGNAL(saveDataChanged()), this, SLOT(slotInsertOrUpdateRecords()));
+    connect(filter, SIGNAL(textChanged(QString)), SLOT(slotFindPositions(QString)));
 
-    slotSelectRecords(actualRecords);
+    slotFillPositions();
+
+    actualRecords
+           ? ui->labelViewState->setText(QString(tr("Отображаются записи: <b><u>Актуальные</u></b>")))
+           : ui->labelViewState->setText(QString(tr("Отображаются записи: <b><u>Все</u></b>")));
 }
 
 Positions::~Positions()
 {
-    if (IS_VALID_PTR(m_selectionModel))  { delete m_selectionModel;  m_selectionModel  = nullptr; }
-    if (IS_VALID_PTR(m_proxyModel))      { delete m_proxyModel;      m_proxyModel      = nullptr; }
-    if (IS_VALID_PTR(m_model))           { delete m_model;           m_model           = nullptr; }
+    if (IS_VALID_PTR(modelSelectionPositions))  { delete modelSelectionPositions;  modelSelectionPositions  = nullptr; }
+    if (IS_VALID_PTR(modelPositions))           { delete modelPositions;           modelPositions           = nullptr; }
 }
 
-void Positions::fillingModel(QSqlQuery &stored)
+void Positions::slotCreateEditDialog(const int &r)
 {
-    m_model->clear();
-    m_model->insertColumns(0, MODEL_COLUMN_COUNT);
-    m_model->insertRows(0, stored.numRowsAffected());
+    if (currentDatabase().isOpen()) {
 
-    unsigned  j(0);
-    QString   m_item;
+        r == 0  ? rad = RecordActionDatabase::ardInsert
+                : rad = RecordActionDatabase::ardUpdate;
 
-    unsigned ncols = stored.record().count();
+        cppsstDialog->setWindowTitle(QString("Должность"));
+
+        if (treeViewCppsst == focusWidget()){
+            if (rad == 0){
+                if (fillFormSelectedRecord()){
+                    cppsstDialog->show();
+                }
+            }else if (rad == 1){
+                if (fillFormSelectedRecord() && !modelSelectionPositions->selection().isEmpty()){
+                    cppsstDialog->show();
+                } else
+                    CCommunicate::showing(QString("Не удается выполнить, запись не выбрана"));
+            }
+        }else
+            CCommunicate::showing(QString("Не удается выполнить, таблица/запись не выбрана"));
+    } else
+        CCommunicate::showing(QString("Не удается выполнить, база данных не доступна"));
+}
+
+void Positions::fillPositionsModel(QSqlQuery &stored)
+{
+    modelPositions->removeRows(0, modelPositions->rowCount(QModelIndex()), QModelIndex());
+    modelPositions->insertRows(stored.numRowsAffected(), 0);
+
 #ifndef QT_NO_CURSOR
-    QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
+    QApplication::setOverrideCursor(QCursor(QPixmap("data/picture/additionally/wait.png")));
 #endif
+
+    QString   it;
+    int ncols = stored.record().count();
+    int row(0);
+
     while(stored.next())
     {
-        for (unsigned i = 0; i != ncols; ++i){
-            if (stored.value(i).toDateTime().isValid()) {
-                m_item = stored.value(i).toDateTime().toString("yyyy-MM-dd hh:mm:ss");
-            } else {
-                m_item = stored.value(i).toString();
+        for (int i = 0; i != ncols; ++i){
+            it = stored.value(i).toString();
+            QStandardItem *item = new QStandardItem(it);
+            if (i == stored.record().indexOf("pos_name")){
+                   item->setIcon(QIcon("data/picture/sidebar/positions.ico"));
             }
-            QStandardItem *item = new QStandardItem(m_item.trimmed());
-            if (i == 1){
-               item->setIcon(QIcon("data/picture/sidebar/positions.ico"));
-            }
-            m_model->setItem(j ,i, item);
+            modelPositions->setItem(row ,i, item);
         }
-        ++j;
+        ++row;
     }
+
 #ifndef QT_NO_CURSOR
     QApplication::restoreOverrideCursor();
 #endif
-}
-
-void Positions::slotSelectRecords(bool actual)
-{
-    QList<QVariant> list;
-    QSqlQuery       stored;
-
-#ifndef QT_NO_CURSOR
-    QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
-#endif
-    list.append((int)actual);
-    stored = execStored(currentDatabase(), "ReadAllPosition", storageHashTable(list));
-
-    fillingModel(stored);
-    m_model->setHeaderData(1, Qt::Horizontal, QObject::tr("Наименование"));
-
-    for (int i = 0; i != m_model->columnCount(); ++i){
-        if (i == 1) {
-            continue;
-        } else {
-            treeView->setColumnHidden(i, true);
-        }
-    }
-#ifndef QT_NO_CURSOR
-    QApplication::restoreOverrideCursor();
-#endif
-    stored.finish();
-
-    actual ? ui->m_lblViewState->setText(QString(tr("Отображаются записи: <b><u>Актуальные</u></b>")))
-           :
-             ui->m_lblViewState->setText(QString(tr("Отображаются записи: <b><u>Все</u></b>")));
-    m_selectedItem = false;
-    actualRecords = !actualRecords;
 }
 
 void Positions::slotCopyRecords(void)
@@ -125,37 +110,37 @@ void Positions::slotCopyRecords(void)
     QList<QVariant> list;
     QSqlQuery       stored;
 
-    unsigned i(0);
-    unsigned m_code = m_selectionModel->currentIndex().sibling(m_selectionModel->currentIndex().row(), i).data(Qt::DisplayRole).toUInt();
+    if (currentDatabase().isOpen()) {
 
-    QString  m_name = m_selectionModel->currentIndex().data(Qt::DisplayRole).toString();
+        int code = modelSelectionPositions->currentIndex().sibling(modelSelectionPositions->currentIndex().row(), 0).data().toUInt();
 
-    if (m_selectionModel->isSelected(m_selectionModel->currentIndex())){
-        QMessageBox answer;
-                    answer.setText(QString(tr("Подтверждаете копирование <b>%1</b>?").arg(m_name)));
-                    answer.setWindowTitle(tr("Копирование"));
-                    answer.setIcon(QMessageBox::Question);
+        if (!modelSelectionPositions->selection().isEmpty()){
+            QMessageBox answer;
+                        answer.setText(QString("Подтверждаете копирование?"));
+                        answer.setWindowTitle("Копирование");
+                        answer.setIcon(QMessageBox::Question);
 
-        QPushButton *m_copy   = answer.addButton(QString(tr("Копировать")), QMessageBox::ActionRole);
-        QPushButton *m_cancel = answer.addButton(QString(tr("Отмена")),     QMessageBox::ActionRole);
+            QPushButton *copy   = answer.addButton(QString("Копировать"), QMessageBox::ActionRole);
+            QPushButton *cancel = answer.addButton(QString("Отмена"),     QMessageBox::ActionRole);
 
-        answer.exec();
+            answer.exec();
 
-        if (answer.clickedButton() == m_copy){
-            list.append(m_code);
-            stored = execStored(currentDatabase(), "CopyPosition", storageHashTable(list));
-            stored.finish();
+            if (answer.clickedButton() == copy){
+                list.append((int)code);
+                stored.setForwardOnly(true);
+                stored = execStored(currentDatabase(), "CopyPositions", storageHashTable(list));
+                stored.finish();
 
-            slotRefreshRecords();
+                slotRefreshRecords(); // refresh
 
-        } else if (answer.clickedButton() == m_cancel){
-            treeView->clearSelection();
-            answer.reject();
-        }
-    } else {
-        CCommunicate::showing(QString("Не удается копировать,\n запись не выбрана"));
-    }
-    m_selectedItem = false;
+            } else if (answer.clickedButton() == cancel){
+                treeViewCppsst->clearSelection();
+                answer.reject();
+            }
+        } else
+            CCommunicate::showing(QString("Не удается выполнить, запись не выбрана"));
+    } else
+        CCommunicate::showing(QString("Не удается выполнить, база данных не доступна"));
 }
 
 void Positions::slotDeleteRecords(void)
@@ -163,115 +148,73 @@ void Positions::slotDeleteRecords(void)
     QList<QVariant> list;
     QSqlQuery       stored;
 
-    unsigned i(0);
-    unsigned m_code = m_selectionModel->currentIndex().sibling(m_selectionModel->currentIndex().row(), i).data(Qt::DisplayRole).toUInt();
+    if (currentDatabase().isOpen()) {
 
-    QString  m_name = m_selectionModel->currentIndex().data(Qt::DisplayRole).toString();
+        int code = modelSelectionPositions->currentIndex().sibling(modelSelectionPositions->currentIndex().row(), 0).data().toUInt();
 
-    if (m_selectionModel->isSelected(m_selectionModel->currentIndex())){
-        QMessageBox answer;
-                    answer.setText(QString(tr("Подтверждаете удаление <b>%1</b>?").arg(m_name)));
-                    answer.setWindowTitle(QString(tr("Удаление")));
-                    answer.setIcon(QMessageBox::Question);
+        if (!modelSelectionPositions->selection().isEmpty()) {
+            QMessageBox answer;
+                        answer.setText(QString("Подтверждаете удаление?"));
+                        answer.setWindowTitle(QString("Удаление"));
+                        answer.setIcon(QMessageBox::Question);
 
-        QPushButton *m_delete = answer.addButton(QString(tr("Удалить")), QMessageBox::ActionRole);
-        QPushButton *m_cancel = answer.addButton(QString(tr("Отмена")),  QMessageBox::ActionRole);
+            QPushButton *_delete = answer.addButton(QString("Удалить"), QMessageBox::ActionRole);
+            QPushButton *cancel = answer.addButton(QString("Отмена"),  QMessageBox::ActionRole);
 
-        answer.exec();
+            answer.exec();
 
-        if (answer.clickedButton() == m_delete){
-            list.append(m_code);
-            stored = execStored(currentDatabase(), "DeletePosition", storageHashTable(list));
-            stored.finish();
+            if (answer.clickedButton() == _delete){
+                list.append((int)code);
+                stored.setForwardOnly(true);
+                stored = execStored(currentDatabase(), "DeletePositions", storageHashTable(list));
+                stored.finish();
 
-            slotRefreshRecords();
+                slotRefreshRecords(); // refresh
 
-        } else if (answer.clickedButton() == m_cancel){
-            treeView->clearSelection();
-            answer.reject();
-        }
-    } else {
-        CCommunicate::showing(QString("Не удается удалить,\n запись не выбрана"));
-    }
-    m_selectedItem = false;
+            } else if (answer.clickedButton() == cancel){
+                treeViewCppsst->clearSelection();
+                answer.reject();
+            }
+        } else
+            CCommunicate::showing(QString("Не удается выполнить, запись не выбрана"));
+    } else
+        CCommunicate::showing(QString("Не удается выполнить, база данных не доступна"));
 }
 
 void Positions::slotRefreshRecords()
 {
+    slotFillPositions();
+}
+
+bool Positions::fillFormSelectedRecord(void)
+{
     QList<QVariant> list;
     QSqlQuery       stored;
 
-#ifndef QT_NO_CURSOR
-    QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
-#endif
-    list.append(!actualRecords);
-    stored = execStored(currentDatabase(), "ReadAllPosition", storageHashTable(list));
+    if (rad == 0) {
+        cppsstDialog->ui->labelUserD->setText(QString("Нет данных"));
+        cppsstDialog->ui->labelDateD->setText(QString("Нет данных"));
+    } else if (rad == 1) {
 
-    fillingModel(stored);
-    m_model->setHeaderData(1, Qt::Horizontal, QObject::tr("Наименование"));
+        list.append(modelSelectionPositions->currentIndex().sibling(modelSelectionPositions->currentIndex().row(), 0).data().toUInt());
+        stored.setForwardOnly(true);
+        stored = execStored(currentDatabase(), "ReadOnePosition", storageHashTable(list));
 
-    for (int i = 0; i != m_model->columnCount(); ++i){
-        if (i == 1) {
-            continue;
+        if (stored.numRowsAffected() > 0) {
+            while (stored.next()) {
+                cppsstDialog->setWindowTitle(QString(cppsstDialog->windowTitle() + " - [ %1 ]").arg(stored.value(stored.record().indexOf("pos_name")).toString()));
+                cppsstDialog->ui->lineEditName->setText(stored.value(stored.record().indexOf("pos_name")).toString());
+                cppsstDialog->ui->checkBoxActual->setChecked(stored.value(stored.record().indexOf("pos_actual")).toBool());
+                cppsstDialog->ui->labelUserD->setText(stored.value(stored.record().indexOf("pos_muser")).toString());
+                cppsstDialog->ui->labelDateD->setText(stored.value(stored.record().indexOf("pos_mdate")).toDateTime().toString("yyyy-MM-dd hh:mm:ss"));
+            }
         } else {
-            treeView->setColumnHidden(i, true);
+            CCommunicate::showing(QString("Не удается выполнить, документ либо его элемент был удален другим пользователем"));
+            return false;
         }
-    }
-#ifndef QT_NO_CURSOR
-    QApplication::restoreOverrideCursor();
-#endif
     stored.finish();
-}
-
-void Positions::slotPushSelectRecordData(void)
-{
-    QList<QVariant> list;
-    QSqlQuery       stored;
-    QString         userName;
-
-    if (m_rad == RecordActionDatabase::ardInsert) {
-        dictionaryDialog->ui->labelUserD->setText(currentUser());
-        dictionaryDialog->ui->labelDateD->setText(QString(tr("Не определено")).trimmed());
     }
-    else
-    if (m_rad == RecordActionDatabase::ardUpdate){
-        unsigned i(1);
-        QString m_item = m_selectionModel->currentIndex().sibling(m_selectionModel->currentIndex().row(), i).data(Qt::DisplayRole).toString();
-        dictionaryDialog->setWindowTitle(QString(dictionaryDialog->windowTitle() + " запись - [ %1 ]").arg(m_item));
-        dictionaryDialog->ui->lineEditItem->setText(QString(m_item).trimmed());
-
-        unsigned c(2);
-        unsigned m_check = m_selectionModel->currentIndex().sibling(m_selectionModel->currentIndex().row(), c).data(Qt::DisplayRole).toUInt();
-        dictionaryDialog->ui->checkBoxActual->setChecked((bool)m_check);
-
-        unsigned u(3);
-        unsigned m_muser = m_selectionModel->currentIndex().sibling(m_selectionModel->currentIndex().row(), u).data(Qt::DisplayRole).toUInt();
-        list.append(m_muser);
-        stored = execStored(currentDatabase(), "ReadCurrentUser", storageHashTable(list));
-        while (stored.next()){
-            userName = stored.record().field("opt_name_first").value().toString();
-        }
-        dictionaryDialog->ui->labelUserD->setText(userName);
-        stored.finish();
-
-        unsigned d(4);
-        QString m_mdate = m_selectionModel->currentIndex().sibling(m_selectionModel->currentIndex().row(), d).data(Qt::DisplayRole).toString();
-        dictionaryDialog->ui->labelDateD->setText(m_mdate);
-    }
-}
-
-void Positions::slotDataChanged(const QModelIndex &index)
-{
-    if (index.isValid()){
-        emit selectionModelIndex(index);
-    }
-}
-
-void Positions::slotGetSelectionModel(const QModelIndex &index)
-{
-    if (index.isValid()){
-        m_selectedItem = true;
-    }
+    return true;
 }
 
 void Positions::slotInsertOrUpdateRecords(void)
@@ -279,24 +222,81 @@ void Positions::slotInsertOrUpdateRecords(void)
     QList<QVariant> list;
     QSqlQuery       stored;
 
-    if (m_rad == RecordActionDatabase::ardInsert){
-        list.append(dictionaryDialog->ui->lineEditItem->text());
-        list.append((int)dictionaryDialog->ui->checkBoxActual->isChecked());
+    if (rad == 0) {
+        list.append(cppsstDialog->ui->lineEditName->text());
+        list.append((int)cppsstDialog->ui->checkBoxActual->isChecked());
         stored = execStored(currentDatabase(), "InsertPosition", storageHashTable(list));
         stored.finish();
     }
-    else
-    if (m_rad == RecordActionDatabase::ardUpdate){
-        unsigned i(0);
-        unsigned m_code = m_selectionModel->currentIndex().sibling(m_selectionModel->currentIndex().row(), i).data(Qt::DisplayRole).toUInt();
+    else if (rad == 1) {
+        int code = modelSelectionPositions->currentIndex().sibling(modelSelectionPositions->currentIndex().row(), 0).data().toUInt();
 
-        list.append(m_code);
-        list.append(dictionaryDialog->ui->lineEditItem->text());
-        list.append((int)(dictionaryDialog->ui->checkBoxActual->isChecked()));
+        list.append(code);
+        list.append(cppsstDialog->ui->lineEditName->text());
+        list.append((int)cppsstDialog->ui->checkBoxActual->isChecked());
         stored = execStored(currentDatabase(), "UpdatePosition", storageHashTable(list));
         stored.finish();
     }
     slotRefreshRecords();
-    clearEditDialog(dictionaryDialog);
-    m_selectedItem = false;
+    clearEditDialog(cppsstDialog);
+}
+
+
+void Positions::slotFillPositions()
+{
+    QList<QVariant> list;
+    QSqlQuery       stored;
+
+#ifndef QT_NO_CURSOR
+    QApplication::setOverrideCursor(QCursor(QPixmap("data/picture/additionally/wait.png")));
+#endif
+
+    if (modelPositions->rowCount() > 0){
+        modelPositions->removeRows(0, modelPositions->rowCount());
+    }
+
+    list.append((int)actualRecords);
+    stored.setForwardOnly(true);
+    stored = execStored(currentDatabase(), "ReadAllPosition", storageHashTable(list));
+
+    fillPositionsModel(stored);
+
+#ifndef QT_NO_CURSOR
+    QApplication::restoreOverrideCursor();
+#endif
+    stored.finish();
+}
+
+void Positions::slotActualRecords(const bool &actual)
+{
+    actualRecords = !actual;
+    slotRefreshRecords();
+    actualRecords
+           ? ui->labelViewState->setText(QString(tr("Отображаются записи: <b><u>Актуальные</u></b>")))
+           : ui->labelViewState->setText(QString(tr("Отображаются записи: <b><u>Все</u></b>")));
+
+}
+
+void Positions::slotFindPositions(const QString &text)
+{
+    QList<QVariant> list;
+    QSqlQuery       stored;
+
+#ifndef QT_NO_CURSOR
+        QApplication::setOverrideCursor(QCursor(QPixmap("data/picture/additionally/wait.png")));
+#endif
+
+        list.append((int)actualRecords);
+        list.append(text);
+        stored.setForwardOnly(true);
+        stored = execStored(currentDatabase(), "FindPositions", storageHashTable(list));
+
+        if (stored.numRowsAffected() > 0) {
+            fillPositionsModel(stored);
+        }
+
+#ifndef QT_NO_CURSOR
+        QApplication::restoreOverrideCursor();
+#endif
+        stored.finish();
 }

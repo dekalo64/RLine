@@ -3,8 +3,9 @@
 #include "source/crm_core/core_dictionarycore.h"
 
 CityDialog::CityDialog(QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::CityDialog)
+    QDialog(parent)
+  , enableSave(false)
+  , ui(new Ui::CityDialog)
 {
     ui->setupUi(this);
 
@@ -32,6 +33,7 @@ CityDialog::~CityDialog()
 void CityDialog::closeEvent(QCloseEvent *)
 {
     CDictionaryCore::clearEditDialog(this);
+    enableSave = false;
 }
 
 void CityDialog::showEvent(QShowEvent *)
@@ -46,7 +48,7 @@ void CityDialog::slotSaveDataChanged()
 
 void CityDialog::updateActions()
 {
-    bool enableBtnConnect = (!ui->lineEditName->text().isEmpty()   && !ui->lineEditNameEng->text().isEmpty() &&
-                             !ui->lineEditCountry->text().isEmpty() && !ui->lineEditCityCode->text().isEmpty());
-    ui->buttonSave->setEnabled(enableBtnConnect);
+    ui->buttonSave->setEnabled(enableSave);
+    enableSave = (!ui->lineEditName->text().isEmpty()    && !ui->lineEditNameEng->text().isEmpty() &&
+                  !ui->lineEditCountry->text().isEmpty() && !ui->lineEditCityCode->text().isEmpty());
 }

@@ -25,8 +25,10 @@ CCommunicate::CCommunicate(const QString &message)
 {
     setObjectName("CCommunicate");
 
-    setMaximumSize(QSize(280, 120));
-    setMinimumSize(QSize(280, 120));
+    setModal(true);
+
+    setMaximumSize(QSize(280, 130));
+    setMinimumSize(QSize(280, 130));
 
     QLabel      *title      = new QLabel("Ошибка", this);
                  QFont fontTitle(QFont("Arial", 11));

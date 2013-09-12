@@ -28,6 +28,7 @@ private slots:
 
 private:
     void updateActions();
+    bool enableSave;
 
 public:
     Ui::CountryDialog *ui;

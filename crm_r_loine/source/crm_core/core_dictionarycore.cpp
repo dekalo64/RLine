@@ -145,6 +145,5 @@ void CFilter::slotUpdateCloseButton(const QString &text)
 
 void CFilter::slotClearSearchToItem()
 {
-    undo();
-    backspace();
+    clear();
 }

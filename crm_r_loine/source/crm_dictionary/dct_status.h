@@ -13,8 +13,18 @@
 #include <QtSql/QSqlRecord>
 #include <QtSql/QSqlField>
 #include <QtSql/QSqlQuery>
+<<<<<<< HEAD
+#endif
 
-class Status: public DictionaryTemplate
+<<<<<<< HEAD
+=======
+>>>>>>> parent of 4ea7787... Добавлено #if QT_VERSION для проверки с 5 версией
+
+=======
+>>>>>>> 7d34168ed62c3fc6f2c3e44c48dc517eb050ca29
+#define  STATUS_MODEL_COLUMN_COUNT 3
+
+class Status: public CCppsst
 {
     Q_OBJECT
 
@@ -23,26 +33,25 @@ public:
     virtual ~Status();
 
     bool actualRecords;
-    bool actualRecordsRefresh;
 
 private:
-    QStandardItemModel    *m_model;
-    QSortFilterProxyModel *m_proxymodel;
-    QItemSelectionModel   *m_selectionModel;
+    QStandardItemModel    *modelStatus;
+    QItemSelectionModel   *modelSelectionStatus;
 
-    void fillingModel(QSqlQuery &stored);
+    void fillStatusModel(QSqlQuery &stored);
+    bool fillFormSelectedRecord (void);
 
 private slots:
+    void slotFillStatus       (void);
+
+    void slotCreateEditDialog(const int &r);
+
+    void slotActualRecords (const bool &actual);
+    void slotFindStatus(const QString &text);
     void slotInsertOrUpdateRecords (void);
-    void slotSelectRecords         (bool actual);
     void slotCopyRecords           (void);
     void slotDeleteRecords         (void);
     void slotRefreshRecords        (void);
-
-    void slotPushSelectRecordData(void);
-
-    void slotDataChanged         (const QModelIndex &index);
-    void slotGetSelectionModel   (const QModelIndex &index);
 };
 
 #endif // STATUS_H

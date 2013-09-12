@@ -1,5 +1,5 @@
 QMainWindow::separator {
-     	 background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+     background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
                                  stop: 0 #E1E1E1, stop: 0.4 #DDDDDD,
                                  stop: 0.5 #D8D8D8, stop: 1.0 #D3D3D3);
      image: url(data/picture/additionally/splitter-handle.png);
@@ -38,7 +38,7 @@ QDockWidget::title {
 
 QDockWidget > QFrame > QCommandLinkButton {
      background: #ebe9ed;
-     border: 0px solid #C4C4C3;
+     border: 0px solid transparent;
      border-radius: 0px;
 
      font-family: Arial;
@@ -178,6 +178,11 @@ QStatusBar::item {
 	 font-family: Arial;     
 }
 
+CFilter:focus{
+     border: 1px solid;
+     border-color: #EE7621;
+}
+
 QLineEdit {
      border: 1px solid #515151;
      border-radius: 2px;
@@ -185,6 +190,11 @@ QLineEdit {
      background: white;
      selection-background-color: #787878;
      min-height: 20px;
+}
+
+QLineEdit:focus {
+     border: 1px solid;
+     border-color: #EE7621;
 }
 
 QListView {
@@ -223,6 +233,14 @@ QTreeView {
      show-decoration-selected: 1;
      font: 12px;
      font-family: Arial;
+}
+
+QTreeView:hover {
+}
+
+QTreeView:focus {
+     border: 1px solid;
+     border-color: #EE7621;
 }
 
 QTreeView::branch:has-children:!has-siblings:closed,
@@ -384,9 +402,14 @@ QComboBox::down-arrow {
      image: url(data/picture/additionally/combobox-handle.png);
 }
 
-QComboBox::down-arrow:on
+QComboBox::down-arrow:on{
      top: 1px;
      left: 1px;
+}
+
+QComboBox:focus{  
+     border: 1px solid;
+     border-color: #EE7621;
 }
 
 QRadioButton::indicator {

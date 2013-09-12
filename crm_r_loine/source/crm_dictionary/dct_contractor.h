@@ -14,7 +14,14 @@
 #include <QtSql/QSqlField>
 #include <QtSql/QSqlQuery>
 
-class ContractorType: public DictionaryTemplate
+#define  CONTRACTOR_MODEL_COLUMN_COUNT 3
+
+<<<<<<< HEAD
+=======
+#define  CONTRACTOR_MODEL_COLUMN_COUNT 3
+
+>>>>>>> 7d34168ed62c3fc6f2c3e44c48dc517eb050ca29
+class ContractorType: public CCppsst
 {
     Q_OBJECT
 
@@ -25,23 +32,32 @@ public:
     bool actualRecords;
 
 private:
-    QStandardItemModel    *m_model;
-    QSortFilterProxyModel *m_proxyModel;
-    QItemSelectionModel   *m_selectionModel;
+    QStandardItemModel    *modelContractor;
+    QItemSelectionModel   *modelSelectionContractor;
 
-    void fillingModel(QSqlQuery &stored);
+    void fillContractorModel(QSqlQuery &stored);
+    bool fillFormSelectedRecord (void);
+<<<<<<< HEAD
 
-private slots:
+private slots:  
+    void slotFillContractor       (void);
+
+    void slotCreateEditDialog(const int &r);
+
+=======
+
+private slots:  
+    void slotFillContractor       (void);
+
+    void slotCreateEditDialog(const int &r);
+
+>>>>>>> 7d34168ed62c3fc6f2c3e44c48dc517eb050ca29
+    void slotActualRecords (const bool &actual);
+    void slotFindContractor(const QString &text);
     void slotInsertOrUpdateRecords (void);
-    void slotSelectRecords         (bool actual);
     void slotCopyRecords           (void);
     void slotDeleteRecords         (void);
     void slotRefreshRecords        (void);
-
-    void slotPushSelectRecordData(void);
-
-    void slotDataChanged         (const QModelIndex &index);
-    void slotGetSelectionModel   (const QModelIndex &index);
 };
 
 #endif // CONTRACTORTYPE_H

@@ -100,9 +100,6 @@ CCountryCity::CCountryCity(QWidget *parent  /* = 0 */) :
     connect(treeViewCountry, SIGNAL(collapsed(QModelIndex)), SLOT(slotClearGroup(QModelIndex)));
     connect(treeViewCountry, SIGNAL(clicked(QModelIndex)),   SLOT(slotFillCities(QModelIndex)));
 
-    connect(this, SIGNAL(fillFormSelectedRecord()), this, SLOT(slotFillFormSelectedRecord()));
-    connect(treeViewCountry, SIGNAL(clicked(QModelIndex)),
-            this, SLOT(slotDataChanged(QModelIndex)));
     connect(countryDialog, SIGNAL(saveDataChanged()), this, SLOT(slotInsertOrUpdateRecords()));
     connect(cityDialog, SIGNAL(saveDataChanged()), this, SLOT(slotInsertOrUpdateRecords()));
 
@@ -110,10 +107,11 @@ CCountryCity::CCountryCity(QWidget *parent  /* = 0 */) :
     connect(addItem->ui->buttonSave, SIGNAL(clicked()), SLOT(slotFillFormSelectedRecord()));
     connect(addItem->ui->buttonSave, SIGNAL(clicked()), addItem, SLOT(close()));
 
+    connect(filter, SIGNAL(textChanged(QString)), SLOT(slotFindCities(QString)));
+
     actualRecords
            ? ui->labelViewState->setText(QString(tr("Отображаются записи: <b><u>Актуальные</u></b>")))
-           :
-             ui->labelViewState->setText(QString(tr("Отображаются записи: <b><u>Все</u></b>")));
+           : ui->labelViewState->setText(QString(tr("Отображаются записи: <b><u>Все</u></b>")));
 }
 
 CCountryCity::~CCountryCity()
@@ -154,7 +152,7 @@ bool CCountryCity::eventFilter(QObject *object, QEvent *event)
     return QWidget::eventFilter(object, event);
 }
 
-void CCountryCity::fillCountryModel(const QModelIndex &index, QSqlQuery &stored)
+void CCountryCity::fillCountryModel(QSqlQuery &stored, const QModelIndex &index)
 {
     modelCountry->insertRows(stored.numRowsAffected(), 0);
 
@@ -218,7 +216,7 @@ void CCountryCity::slotFillGroup(const QModelIndex &index)
     stored.setForwardOnly(true);
     stored = execStored(currentDatabase(), "ReadAllCountries", storageHashTable(list));
 
-    fillCountryModel(index, stored);
+    fillCountryModel(stored, index);
 
 #ifndef QT_NO_CURSOR
         QApplication::restoreOverrideCursor();
@@ -266,6 +264,39 @@ void CCountryCity::slotClearGroup(const QModelIndex &index)
     }
     modelCountry->itemFromIndex(index)->setChild(modelCountry->rowCount(index), new QStandardItem("Загрузка..."));
 
+}
+
+void CCountryCity::slotActualRecords(const bool &actual)
+{
+    actualRecords = !actual;
+    slotRefreshRecords();
+    actualRecords
+           ? ui->labelViewState->setText(QString(tr("Отображаются записи: <b><u>Актуальные</u></b>")))
+           : ui->labelViewState->setText(QString(tr("Отображаются записи: <b><u>Все</u></b>")));
+}
+
+void CCountryCity::slotFindCities(const QString &text)
+{
+    QList<QVariant> list;
+    QSqlQuery       stored;
+
+#ifndef QT_NO_CURSOR
+        QApplication::setOverrideCursor(QCursor(QPixmap("data/picture/additionally/wait.png")));
+#endif
+
+        list.append((int)actualRecords);
+        list.append(text);
+        stored.setForwardOnly(true);
+        stored = execStored(currentDatabase(), "crm_FindCities", storageHashTable(list));
+
+        if (stored.numRowsAffected() > 0) {
+            fillCityModel(stored);
+        }
+
+#ifndef QT_NO_CURSOR
+        QApplication::restoreOverrideCursor();
+#endif
+        stored.finish();
 }
 
 void CCountryCity::fillCityModel(QSqlQuery &stored)
@@ -402,6 +433,7 @@ void CCountryCity::slotCopyRecords()
                         list.append(codeCountry);
                         stored = execStored(currentDatabase(), "CopyCity", storageHashTable(list));
                         stored.finish();
+                        slotRefreshRecordsCity();
                     } else if (answer.clickedButton() == cancel){
                         answer.reject();
                     }
@@ -453,7 +485,7 @@ void CCountryCity::slotPasteRecords(void)
                           list.append(mc.idCountry);
                           stored = execStored(currentDatabase(), "MoveCity", storageHashTable(list));
                           stored.finish();
-
+                          slotRefreshRecordsCity();
                           mc.idCity    =  -1;
                           mc.nameCity  =  "";
                       } else if (answer.clickedButton() == cancel){
@@ -475,7 +507,7 @@ void CCountryCity::slotDeleteRecords(void)
     bool            removable(false);
 
     unsigned code(0);
-    QString  name(QString());
+    QString  name(QString(""));
 
     if (currentDatabase().isOpen()) {
 
@@ -528,10 +560,11 @@ void CCountryCity::slotDeleteRecords(void)
                     if (focusedWidget->objectName() == treeViewCountry->objectName()){
                         stored = execStored(currentDatabase(), "DeleteCountry", storageHashTable(list));
                         stored.finish();
-                        // refresh
+                        slotRefreshRecordsCountry();
                     } else if (focusedWidget->objectName() == treeViewCity->objectName()){
                         stored = execStored(currentDatabase(), "DeleteCity", storageHashTable(list));
                         stored.finish();
+                        slotRefreshRecordsCity();
                     }
                 } else if (answer.clickedButton() == cancel){
                     answer.reject();
@@ -556,61 +589,15 @@ void CCountryCity::slotRefreshRecords()
 
 void CCountryCity::slotRefreshRecordsCountry()
 {
-    QList<QVariant> list;
-    QSqlQuery       stored;
-
-#ifndef QT_NO_CURSOR
-    QApplication::setOverrideCursor(QCursor(QPixmap("data/picture/additionally/wait.png")));
-#endif
-    list.append(!actualRecords);
-    list.append((int)0); // параметр skip
-    stored.setForwardOnly(false);
-    stored = execStored(currentDatabase(), "ReadAllCountries", storageHashTable(list));
-
-    //fillCountryModel(stored);
-    modelCountry->setHeaderData(0, Qt::Horizontal, QObject::tr("Наименование"));
-
-    for (int i = 0; i != modelCountry->columnCount(); ++i){
-        if (i != 0) {
-            treeViewCountry->setColumnHidden(i, true);
-        }
-    }
-#ifndef QT_NO_CURSOR
-    QApplication::restoreOverrideCursor();
-#endif
-    stored.finish();
+    slotFillGroup(root->index());
 }
 
 void CCountryCity::slotRefreshRecordsCity()
 {
-    QList<QVariant> list;
-    QSqlQuery       stored;
-
-#ifndef QT_NO_CURSOR
-    QApplication::setOverrideCursor(QCursor(QPixmap("data/picture/additionally/wait.png")));
-#endif
-    list.append(!actualRecords);
-    stored.setForwardOnly(false);
-    stored = execStored(currentDatabase(), "ReadAllCity", storageHashTable(list));
-
-    fillCityModel(stored);
-    modelCity->setHeaderData(1, Qt::Horizontal, QObject::tr("Страна"));
-    modelCity->setHeaderData(2, Qt::Horizontal, QObject::tr("Название"));
-    modelCity->setHeaderData(3, Qt::Horizontal, QObject::tr("Name"));
-    modelCity->setHeaderData(4, Qt::Horizontal, QObject::tr("Телефон/Код"));
-
-    for (int i = 0; i != modelCity->columnCount(); ++i){
-        if (i <= 0 || i >= 5) {
-            treeViewCity->setColumnHidden(i, true);
-        }
-    }
-#ifndef QT_NO_CURSOR
-    QApplication::restoreOverrideCursor();
-#endif
-    stored.finish();
+    slotFillCities(modelSelectionCountry->currentIndex());
 }
 
-void CCountryCity::slotCreateEditDialog(int r)
+void CCountryCity::slotCreateEditDialog(const int &r)
 {
     if (currentDatabase().isOpen()) {    
 
@@ -639,12 +626,12 @@ void CCountryCity::slotCreateEditDialog(int r)
                 }
             }
 
-            if (focusedWidget->objectName() == treeViewCity->objectName()){
-                if(modelSelectionCountry->selection().isEmpty()){
-                    CCommunicate::showing(QString("Не удается выполнить, страна не выбрана"));
-                    return;
-                }
-            }
+//            if (focusedWidget->objectName() == treeViewCity->objectName()){
+//                if(modelSelectionCountry->selection().isEmpty()){
+//                    CCommunicate::showing(QString("Не удается выполнить, страна не выбрана"));
+//                    return;
+//                }
+//            }
 
             if (focusedWidget->objectName() == treeViewCity->objectName()){
                 if (modelSelectionCountry->currentIndex() == root->index() && rad == 0){
@@ -667,24 +654,25 @@ void CCountryCity::slotCreateEditDialog(int r)
                 }
             }
 
-            if (focusedWidget->objectName() == treeViewCountry->objectName()){
-                if (rad == 0) {
-                    addItem->show();
-                    modelSelectionCountry->currentIndex() == root->index() ? addItem->ui->radioNewSubCatalog->setEnabled(false)
-                                                                           : addItem->ui->radioNewSubCatalog->setEnabled(true);
-                } else
-                    countryDialog->show();
-            } else if (focusedWidget->objectName() == treeViewCity->objectName()){
+            if (fillFormSelectedRecord()){
+                if (focusedWidget->objectName() == treeViewCountry->objectName()){
+                    if (rad == 0) {
+                        addItem->show();
+                        modelSelectionCountry->currentIndex() == root->index() ? addItem->ui->radioNewSubCatalog->setEnabled(false)
+                                                                               : addItem->ui->radioNewSubCatalog->setEnabled(true);
+                    } else
+                        countryDialog->show();
+                } else if (focusedWidget->objectName() == treeViewCity->objectName()){
                     cityDialog->show();
+                }
             }
-            emit fillFormSelectedRecord();
         } else
         CCommunicate::showing(QString("Не удается выполнить, страна или город/регион не выбраны"));
     } else
     CCommunicate::showing(QString("Не удается выполнить, база данных не доступна"));
 }
 
-void CCountryCity::slotFillFormSelectedRecord()
+bool CCountryCity::fillFormSelectedRecord()
 {
     QList<QVariant> list;
     QSqlQuery       stored;
@@ -696,44 +684,62 @@ void CCountryCity::slotFillFormSelectedRecord()
             stored.setForwardOnly(true);
             stored = execStored(currentDatabase(), "ReadOneCountry", storageHashTable(list));
 
-            while (stored.next()) {
-                countryDialog->setWindowTitle(QString(countryDialog->windowTitle() + " - [ %1 ]").arg(stored.value(stored.record().indexOf("cty_name_first")).toString()));
-                countryDialog->ui->lineEditName->setText(stored.value(stored.record().indexOf("cty_name_first")).toString());
-                countryDialog->ui->lineEditNameEng->setText(stored.value(stored.record().indexOf("cty_name_second")).toString());
-                countryDialog->ui->lineEditCityCode->setText(stored.value(stored.record().indexOf("cty_phone_code")).toString());
-                countryDialog->ui->checkBoxActual->setChecked(stored.value(stored.record().indexOf("cty_actual")).toBool());
+            if (stored.numRowsAffected() > 0) {
+                while (stored.next()) {
+                    countryDialog->setWindowTitle(QString(countryDialog->windowTitle() + " - [ %1 ]").arg(stored.value(stored.record().indexOf("cty_name_first")).toString()));
+                    countryDialog->ui->lineEditName->setText(stored.value(stored.record().indexOf("cty_name_first")).toString());
+                    countryDialog->ui->lineEditNameEng->setText(stored.value(stored.record().indexOf("cty_name_second")).toString());
+                    countryDialog->ui->lineEditCityCode->setText(stored.value(stored.record().indexOf("cty_phone_code")).toString());
+                    countryDialog->ui->checkBoxActual->setChecked(stored.value(stored.record().indexOf("cty_actual")).toBool());
+                    countryDialog->ui->labelUserD->setText(stored.value(stored.record().indexOf("cty_muser")).toString());
+                    countryDialog->ui->labelDateD->setText(stored.value(stored.record().indexOf("cty_mdate")).toDateTime().toString("yyyy-MM-dd hh:mm:ss"));
+                }
+            } else {
+                CCommunicate::showing(QString("Не удается выполнить, документ либо его элемент был удален другим пользователем"));
+                return false;
             }
         }
     } else if (focusedWidget->objectName() == treeViewCity->objectName()){
-        cityDialog->ui->lineEditCountry->setText(modelSelectionCountry->currentIndex().sibling(modelSelectionCountry->currentIndex().row(), 0).data(Qt::DisplayRole).toString());
-        cityDialog->ui->lineEditCountry->setReadOnly(true);
+                    cityDialog->ui->lineEditCountry->setText(modelSelectionCountry->currentIndex().sibling(modelSelectionCountry->currentIndex().row(), 0).data(Qt::DisplayRole).toString());
+                    cityDialog->ui->lineEditCountry->setReadOnly(true);
 
-        if (rad == RecordActionDatabase::ardInsert){
-            QString ctyCityCode = modelSelectionCountry->currentIndex().sibling(modelSelectionCountry->currentIndex().row(), 3).data(Qt::DisplayRole).toString();
-            cityDialog->ui->lineEditCountryCode->setText(ctyCityCode);
-        } else
-        if (rad == RecordActionDatabase::ardUpdate){
-            QString ctyFirstName = modelSelectionCity->currentIndex().sibling(modelSelectionCity->currentIndex().row(), 1).data(Qt::DisplayRole).toString();
-            cityDialog->ui->lineEditCountry->setText(ctyFirstName);
+            if (rad == 0){
 
-            QString citFirstName = modelSelectionCity->currentIndex().sibling(modelSelectionCity->currentIndex().row(), 2).data(Qt::DisplayRole).toString();
-            cityDialog->setWindowTitle(QString(cityDialog->windowTitle() + " запись - [ %1 ]").arg(citFirstName));
-            cityDialog->ui->lineEditName->setText(QString(citFirstName).trimmed());
+                list.append(modelSelectionCountry->currentIndex().sibling(modelSelectionCountry->currentIndex().row(), 1).data().toUInt());
+                stored.setForwardOnly(true);
+                stored = execStored(currentDatabase(), "ReadOneCountry", storageHashTable(list));
 
-            QString citSecondName = modelSelectionCity->currentIndex().sibling(modelSelectionCity->currentIndex().row(), 3).data(Qt::DisplayRole).toString();
-            cityDialog->ui->lineEditNameEng->setText(citSecondName);
+                while (stored.next()) {
+                    cityDialog->ui->lineEditCountryCode->setText(stored.value(stored.record().indexOf("cty_phone_code")).toString());
+                }
 
-            QString citCityCode = modelSelectionCity->currentIndex().sibling(modelSelectionCity->currentIndex().row(), 4).data(Qt::DisplayRole).toString();
-            cityDialog->ui->lineEditCityCode->setText(citCityCode);
+            } else if (rad == 1){
 
-            QString ctyCityCode = modelSelectionCountry->currentIndex().sibling(modelSelectionCountry->currentIndex().row(), 3).data(Qt::DisplayRole).toString();
-            cityDialog->ui->lineEditCountryCode->setText(ctyCityCode);
+                    list.append(modelSelectionCity->currentIndex().sibling(modelSelectionCity->currentIndex().row(), 0).data().toUInt());
+                    stored.setForwardOnly(true);
+                    stored = execStored(currentDatabase(), "ReadOneCity", storageHashTable(list));
 
-            unsigned actual = modelSelectionCity->currentIndex().sibling(modelSelectionCity->currentIndex().row(), 5).data(Qt::DisplayRole).toUInt();
-            cityDialog->ui->checkBoxActual->setChecked(actual);
+
+                    if (stored.numRowsAffected() > 0) {
+                        while (stored.next()) {
+                            cityDialog->setWindowTitle(QString(cityDialog->windowTitle() + " - [ %1 ]").arg(stored.value(stored.record().indexOf("cit_name_first")).toString()));
+                            cityDialog->ui->lineEditCountry->setText(stored.value(stored.record().indexOf("cty_name_first")).toString());
+                            cityDialog->ui->lineEditName->setText(stored.value(stored.record().indexOf("cit_name_first")).toString());
+                            cityDialog->ui->lineEditNameEng->setText(stored.value(stored.record().indexOf("cit_name_second")).toString());
+                            cityDialog->ui->lineEditCityCode->setText(stored.value(stored.record().indexOf("cit_phone_code")).toString());
+                            cityDialog->ui->lineEditCountryCode->setText(stored.value(stored.record().indexOf("cty_phone_code")).toString());
+                            cityDialog->ui->checkBoxActual->setChecked(stored.value(stored.record().indexOf("cit_actual")).toBool());
+                            cityDialog->ui->labelUserD->setText(stored.value(stored.record().indexOf("cit_muser")).toString());
+                            cityDialog->ui->labelDateD->setText(stored.value(stored.record().indexOf("cit_mdate")).toDateTime().toString("yyyy-MM-dd hh:mm:ss"));
+                        }
+                    } else {
+                        CCommunicate::showing(QString("Не удается выполнить, документ либо его элемент был удален другим пользователем"));
+                        return false;
+                    }
+                }
         }
-    }
     stored.finish();
+    return true;
 }
 
 void CCountryCity::slotInsertOrUpdateRecords(void)
@@ -746,16 +752,15 @@ void CCountryCity::slotInsertOrUpdateRecords(void)
             if (addItem->ui->radioNewCatalog->isChecked()){
                 list.append((int)0);
             } else
-            list.append(modelSelectionCountry->currentIndex().sibling(modelSelectionCountry->currentIndex().row(), 1).data(Qt::DisplayRole).toUInt());
+            list.append(modelSelectionCountry->currentIndex().sibling(modelSelectionCountry->currentIndex().row(), 1).data().toUInt());
             list.append(countryDialog->ui->lineEditName->text());
             list.append(countryDialog->ui->lineEditNameEng->text());
             list.append(countryDialog->ui->lineEditCityCode->text());
             list.append((int)countryDialog->ui->checkBoxActual->isChecked());
             stored = execStored(currentDatabase(), "InsertCountry", storageHashTable(list));
             stored.finish();
-        } else
-        if (rad == RecordActionDatabase::ardUpdate){
-            list.append(modelSelectionCountry->currentIndex().sibling(modelSelectionCountry->currentIndex().row(), 1).data(Qt::DisplayRole).toUInt());
+        } else if (rad == 1){
+            list.append(modelSelectionCountry->currentIndex().sibling(modelSelectionCountry->currentIndex().row(), 1).data().toUInt());
             list.append(countryDialog->ui->lineEditName->text());
             list.append(countryDialog->ui->lineEditNameEng->text());
             list.append(countryDialog->ui->lineEditCityCode->text());
@@ -763,22 +768,20 @@ void CCountryCity::slotInsertOrUpdateRecords(void)
             stored = execStored(currentDatabase(), "UpdateCountry", storageHashTable(list));
             stored.finish();
         }
-         // refresh
+        slotRefreshRecordsCountry();
         clearEditDialog(countryDialog);
     }
-    else
-    if (focusedWidget->objectName() == treeViewCity->objectName()){
-        if (rad == RecordActionDatabase::ardInsert){
-            list.append(modelSelectionCountry->currentIndex().sibling(modelSelectionCountry->currentIndex().row(), 1).data(Qt::DisplayRole).toUInt());
+    else if (focusedWidget->objectName() == treeViewCity->objectName()){
+        if (rad == 0){
+            list.append(modelSelectionCountry->currentIndex().sibling(modelSelectionCountry->currentIndex().row(), 1).data().toUInt());
             list.append(cityDialog->ui->lineEditName->text());
             list.append(cityDialog->ui->lineEditNameEng->text());
             list.append(cityDialog->ui->lineEditCityCode->text());
             list.append((int)cityDialog->ui->checkBoxActual->isChecked());
             stored = execStored(currentDatabase(), "InsertCity", storageHashTable(list));
             stored.finish();
-        } else
-        if (rad == RecordActionDatabase::ardUpdate){
-            list.append(modelSelectionCity->currentIndex().sibling(modelSelectionCity->currentIndex().row(), 0).data(Qt::DisplayRole).toUInt());
+        } else if (rad == 1){
+            list.append(modelSelectionCity->currentIndex().sibling(modelSelectionCity->currentIndex().row(), 0).data().toUInt());
             list.append(cityDialog->ui->lineEditName->text());
             list.append(cityDialog->ui->lineEditNameEng->text());
             list.append(cityDialog->ui->lineEditCityCode->text());
@@ -786,7 +789,7 @@ void CCountryCity::slotInsertOrUpdateRecords(void)
             stored = execStored(currentDatabase(), "UpdateCity", storageHashTable(list));
             stored.finish();
         }
-         // refresh
+        slotRefreshRecordsCity();
         clearEditDialog(cityDialog);
     }
 }
@@ -840,9 +843,6 @@ void CCityTreeView::dropEvent(QDropEvent *event)
     QTreeView *source = qobject_cast<QTreeView*>(event->source());
 
     if (source && source != this){
-
-        QMessageBox::information(0, "title", "test");
-
         event->setDropAction(Qt::MoveAction);
         event->accept();
     }
