@@ -13,18 +13,7 @@
 #include <QtSql/QSqlRecord>
 #include <QtSql/QSqlField>
 #include <QtSql/QSqlQuery>
-<<<<<<< HEAD
-#endif
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> parent of 4ea7787... Добавлено #if QT_VERSION для проверки с 5 версией
-
-=======
->>>>>>> 7d34168ed62c3fc6f2c3e44c48dc517eb050ca29
-=======
->>>>>>> 7d34168ed62c3fc6f2c3e44c48dc517eb050ca29
 #define  STATUS_MODEL_COLUMN_COUNT 3
 
 class Status: public CCppsst

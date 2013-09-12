@@ -626,12 +626,12 @@ void CCountryCity::slotCreateEditDialog(const int &r)
                 }
             }
 
-//            if (focusedWidget->objectName() == treeViewCity->objectName()){
-//                if(modelSelectionCountry->selection().isEmpty()){
-//                    CCommunicate::showing(QString("Не удается выполнить, страна не выбрана"));
-//                    return;
-//                }
-//            }
+            if (focusedWidget->objectName() == treeViewCity->objectName()){
+                if(modelSelectionCountry->selection().isEmpty()){
+                    CCommunicate::showing(QString("Не удается выполнить, страна не выбрана"));
+                    return;
+                }
+            }
 
             if (focusedWidget->objectName() == treeViewCity->objectName()){
                 if (modelSelectionCountry->currentIndex() == root->index() && rad == 0){
@@ -707,13 +707,6 @@ bool CCountryCity::fillFormSelectedRecord()
                     cityDialog->ui->lineEditCountry->setReadOnly(true);
 
             if (rad == 0){
-<<<<<<< HEAD
-
-                list.append(modelSelectionCountry->currentIndex().sibling(modelSelectionCountry->currentIndex().row(), 1).data().toUInt());
-                stored.setForwardOnly(true);
-                stored = execStored(currentDatabase(), "ReadOneCountry", storageHashTable(list));
-
-=======
 
                 cityDialog->ui->labelUserD->setText(QString("Нет данных"));
                 cityDialog->ui->labelDateD->setText(QString("Нет данных"));
@@ -722,7 +715,6 @@ bool CCountryCity::fillFormSelectedRecord()
                 stored.setForwardOnly(true);
                 stored = execStored(currentDatabase(), "ReadOneCountry", storageHashTable(list));
 
->>>>>>> 7d34168ed62c3fc6f2c3e44c48dc517eb050ca29
                 while (stored.next()) {
                     cityDialog->ui->lineEditCountryCode->setText(stored.value(stored.record().indexOf("cty_phone_code")).toString());
                 }
