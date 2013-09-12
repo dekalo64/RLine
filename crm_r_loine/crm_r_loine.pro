@@ -1,5 +1,7 @@
 QT += sql core gui
 
+# Changes for test
+
 TARGET   = crm
 TEMPLATE = app
 
