@@ -678,7 +678,10 @@ bool CCountryCity::fillFormSelectedRecord()
     QSqlQuery       stored;
 
     if (focusedWidget->objectName() == treeViewCountry->objectName()){
-        if (rad == 1){
+        if (rad == 0){
+            countryDialog->ui->labelUserD->setText(QString("Нет данных"));
+            countryDialog->ui->labelDateD->setText(QString("Нет данных"));
+        } else if (rad == 1){
 
             list.append(modelSelectionCountry->currentIndex().sibling(modelSelectionCountry->currentIndex().row(), 1).data().toUInt());
             stored.setForwardOnly(true);
@@ -704,11 +707,22 @@ bool CCountryCity::fillFormSelectedRecord()
                     cityDialog->ui->lineEditCountry->setReadOnly(true);
 
             if (rad == 0){
+<<<<<<< HEAD
 
                 list.append(modelSelectionCountry->currentIndex().sibling(modelSelectionCountry->currentIndex().row(), 1).data().toUInt());
                 stored.setForwardOnly(true);
                 stored = execStored(currentDatabase(), "ReadOneCountry", storageHashTable(list));
 
+=======
+
+                cityDialog->ui->labelUserD->setText(QString("Нет данных"));
+                cityDialog->ui->labelDateD->setText(QString("Нет данных"));
+
+                list.append(modelSelectionCountry->currentIndex().sibling(modelSelectionCountry->currentIndex().row(), 1).data().toUInt());
+                stored.setForwardOnly(true);
+                stored = execStored(currentDatabase(), "ReadOneCountry", storageHashTable(list));
+
+>>>>>>> 7d34168ed62c3fc6f2c3e44c48dc517eb050ca29
                 while (stored.next()) {
                     cityDialog->ui->lineEditCountryCode->setText(stored.value(stored.record().indexOf("cty_phone_code")).toString());
                 }

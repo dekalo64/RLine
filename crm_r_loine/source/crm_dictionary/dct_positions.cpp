@@ -63,8 +63,15 @@ void Positions::slotCreateEditDialog(const int &r)
                     cppsstDialog->show();
                 }
             }else if (rad == 1){
+<<<<<<< HEAD
                 if (fillFormSelectedRecord() && !modelSelectionPositions->selection().isEmpty()){
                     cppsstDialog->show();
+=======
+                if (!modelSelectionPositions->selection().isEmpty()){
+                    if (fillFormSelectedRecord()){
+                        cppsstDialog->show();
+                    }
+>>>>>>> 7d34168ed62c3fc6f2c3e44c48dc517eb050ca29
                 } else
                     CCommunicate::showing(QString("Не удается выполнить, запись не выбрана"));
             }

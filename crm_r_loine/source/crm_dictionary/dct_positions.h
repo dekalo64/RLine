@@ -33,12 +33,21 @@ private:
     void fillPositionsModel(QSqlQuery &stored);
     bool fillFormSelectedRecord (void);
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 private slots:
     void slotFillPositions         (void);
 
     void slotCreateEditDialog(const int &r);
 
+=======
+
+private slots:
+    void slotFillPositions         (void);
+
+    void slotCreateEditDialog(const int &r);
+
+>>>>>>> 7d34168ed62c3fc6f2c3e44c48dc517eb050ca29
 =======
 
 private slots:

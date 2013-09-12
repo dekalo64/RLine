@@ -11,6 +11,7 @@
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include <QtGlobal>
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
 
@@ -29,6 +30,8 @@
 >>>>>>> 7d34168ed62c3fc6f2c3e44c48dc517eb050ca29
 =======
 >>>>>>> parent of 4ea7787... Добавлено #if QT_VERSION для проверки с 5 версией
+=======
+>>>>>>> 7d34168ed62c3fc6f2c3e44c48dc517eb050ca29
 #include <QtGui/QStandardItemModel>
 #include <QtGui/QWidget>
 #include <QtGui/QTreeView>
