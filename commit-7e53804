@@ -1,0 +1,36 @@
+commit 7e53804e814ed9c086733b27931e0d43f8a37358
+Author: Dekalo64 <dekalo64@gmail.com>
+Date:   Fri Sep 13 09:29:27 2013 +0300
+
+    Подготовка к 5 версии #if QT_VERSION
+
+diff --git a/crm_r_loine/source/crm_additionally/adl_communicate.h b/crm_r_loine/source/crm_additionally/adl_communicate.h
+index 532b576..18a4fbe 100644
+--- a/crm_r_loine/source/crm_additionally/adl_communicate.h
++++ b/crm_r_loine/source/crm_additionally/adl_communicate.h
+@@ -3,6 +3,17 @@
+ #ifndef  COMMUNICATE_H
+ #define  COMMUNICATE_H
+ 
++#include <QtGlobal>
++#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
++
++#include <QtGui>
++#include <QDialog>
++#include <QPushButton>
++#include <QLabel>
++#include <QHBoxLayout>
++#include <QVBoxLayout>
++#include <QPushButton>
++#else
+ #include <QtGui>
+ #include <QtGui/QDialog>
+ #include <QtGui/QPushButton>
+@@ -10,6 +21,7 @@
+ #include <QtGui/QHBoxLayout>
+ #include <QtGui/QVBoxLayout>
+ #include <QtGui/QPushButton>
++#endif
+ 
+ class CCommunicate : public QDialog
+ {
