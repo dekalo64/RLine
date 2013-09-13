@@ -3,6 +3,17 @@
 #ifndef  COMMUNICATE_H
 #define  COMMUNICATE_H
 
+#include <QtGlobal>
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+
+#include <QtGui>
+#include <QDialog>
+#include <QPushButton>
+#include <QLabel>
+#include <QHBoxLayout>
+#include <QVBoxLayout>
+#include <QPushButton>
+#else
 #include <QtGui>
 #include <QtGui/QDialog>
 #include <QtGui/QPushButton>
@@ -10,6 +21,7 @@
 #include <QtGui/QHBoxLayout>
 #include <QtGui/QVBoxLayout>
 #include <QtGui/QPushButton>
+#endif
 
 class CCommunicate : public QDialog
 {
