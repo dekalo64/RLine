@@ -1,4 +1,5 @@
 QT += sql core gui
+QT += widgets
 
 # Changes for test
 
