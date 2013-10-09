@@ -1,54 +1,63 @@
-#include "source/crm_dialog/dlg_city.h"
 #include "ui_dlg_city.h"
+
+#include "source/crm_dialog/dlg_city.h"
 #include "source/crm_core/core_dictionarycore.h"
 
-CityDialog::CityDialog(QWidget *parent) :
+CCityDialog::CCityDialog(QWidget *parent) :
     QDialog(parent)
-  , enableSave(false)
-  , ui(new Ui::CityDialog)
+  , ui(new Ui::CCityDialog)
 {
     ui->setupUi(this);
-
     setWindowFlags(Qt::Drawer);
+
     setModal(true);
 
-    ui->lineEditCountryCode->setReadOnly(true);
-
-    connect(ui->buttonSave, SIGNAL(clicked()), this, SLOT(slotSaveDataChanged()));
+    connect(ui->buttonSave,   SIGNAL(clicked()), this, SLOT(slotSaveDataChanged()));
     connect(ui->buttonCancel, SIGNAL(clicked()), this, SLOT(close()));
-    connect(ui->lineEditName, SIGNAL(textEdited(QString)), this, SLOT(slotCurrentChanged()));
-    connect(ui->lineEditNameEng, SIGNAL(textEdited(QString)), this, SLOT(slotCurrentChanged()));
-    connect(ui->lineEditCountry, SIGNAL(textEdited(QString)), this, SLOT(slotCurrentChanged()));
-    connect(ui->lineEditCityCode, SIGNAL(textEdited(QString)), this, SLOT(slotCurrentChanged()));
-    connect(ui->checkBoxActual, SIGNAL(clicked()), this, SLOT(slotCurrentChanged()));
-
-    updateActions();
 }
 
-CityDialog::~CityDialog()
+CCityDialog::~CCityDialog()
 {
     delete ui;
 }
 
-void CityDialog::closeEvent(QCloseEvent *)
+void CCityDialog::fillFormSelectedRecord(const QList<QString> &param, const Action &act)
+{
+    if (act == Action::Add){
+        ui->lineEditCountry->setText     (param.at(0));
+        ui->lineEditCountryCode->setText (param.at(1));
+        ui->labelUserD->setText          (param.at(2));
+        ui->labelDateD->setText          (param.at(3));
+    } else if (act == Action::Edit){
+        setWindowTitle(windowTitle() + QString(" - [%1]").arg(param.at(1)));
+
+        ui->lineEditCountry->setText     (param.at(0));
+        ui->lineEditName->setText        (param.at(1));
+        ui->lineEditNameEng->setText     (param.at(2));
+        ui->lineEditCountryCode->setText (param.at(3));
+        ui->lineEditCityCode->setText    (param.at(4));
+        ui->checkBoxActual->setChecked   (QVariant(param.at(5)).toBool());
+        ui->labelUserD->setText          (param.at(6));
+        ui->labelDateD->setText          (param.at(7));
+    }
+}
+
+void CCityDialog::closeEvent(QCloseEvent *)
 {
     CDictionaryCore::clearEditDialog(this);
-    enableSave = false;
+    setWindowTitle("Город/Регион");
 }
 
-void CityDialog::showEvent(QShowEvent *)
+void CCityDialog::slotSaveDataChanged()
 {
-    updateActions();
-}
+    setWindowTitle("Город/Регион");
 
-void CityDialog::slotSaveDataChanged()
-{
-    emit saveDataChanged();
-}
+    QList<QString> param;
 
-void CityDialog::updateActions()
-{
-    ui->buttonSave->setEnabled(enableSave);
-    enableSave = (!ui->lineEditName->text().isEmpty()    && !ui->lineEditNameEng->text().isEmpty() &&
-                  !ui->lineEditCountry->text().isEmpty() && !ui->lineEditCityCode->text().isEmpty());
+    param.append(ui->lineEditName->text());
+    param.append(ui->lineEditNameEng->text());
+    param.append(ui->lineEditCityCode->text());
+    param.append(QString("%1").arg(ui->checkBoxActual->isChecked()));
+
+    emit saveDataChanged(param);
 }

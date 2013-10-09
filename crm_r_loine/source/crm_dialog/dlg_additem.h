@@ -4,22 +4,22 @@
 #include <QtGui/QDialog>
 
 namespace Ui {
-class AddItem;
+class CAddItem;
 }
 
-class AddItem : public QDialog
+class CAddItem : public QDialog
 {
     Q_OBJECT
     
 public:
-    explicit AddItem(QWidget *parent = 0);
-    virtual ~AddItem();
+    explicit CAddItem(QWidget *parent = 0);
+    virtual ~CAddItem();
 
 protected:
     void showEvent(QShowEvent *);
 
 public:
-    Ui::AddItem *ui;
+    Ui::CAddItem *ui;
 };
 
 #endif // NEWITEM_H

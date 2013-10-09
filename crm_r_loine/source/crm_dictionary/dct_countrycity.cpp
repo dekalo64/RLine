@@ -1,5 +1,4 @@
 #include "ui_dct_countrycity.h"
-#include "ui_dlg_additem.h"
 
 #include "source/crm_dictionary/dct_countrycity.h"
 #include "source/crm_additionally/adl_communicate.h"
@@ -10,29 +9,29 @@ QT_END_NAMESPACE
 
 CCountryCity::CCountryCity(QWidget *parent  /* = 0 */) :
     QWidget(parent)
-  , actualRecords(false)
   , ui(new Ui::CCountryCity)
-  , cityDialog(new CityDialog(this)), countryDialog(new CountryDialog(this))
-  , focusedWidget(nullptr)
-  , addItem(new AddItem(this))
 {
     ui->setupUi(this);
 
-// model
+// models
     modelCountry  = new QStandardItemModel(this);
     modelCity     = new QStandardItemModel(this);
 
     modelSelectionCountry  = new QItemSelectionModel(modelCountry);
     modelSelectionCity     = new QItemSelectionModel(modelCity);
 
+// dialogs
+    countryDialog = new CCountryDialog(this);
+    cityDialog    = new CCityDialog   (this);
+
     QSplitter *splitter = new QSplitter(Qt::Horizontal);
 
-    treeViewCountry = new QTreeView   (this);
-    treeViewCity    = new CCityTreeView(this);
+    treeCountry = new CCountryTreeView (this);
+    treeCity    = new CCityTreeView    (this);
 
     QHBoxLayout *hbox = new QHBoxLayout(this);
-                 hbox->addWidget(treeViewCountry);
-                 hbox->addWidget(treeViewCity);
+                 hbox->addWidget(treeCountry);
+                 hbox->addWidget(treeCity);
 
     splitter->setLayout(hbox);
     splitter->setCollapsible(0, false);
@@ -41,33 +40,36 @@ CCountryCity::CCountryCity(QWidget *parent  /* = 0 */) :
 
     ui->hLayoutTreeView->addWidget(splitter);
 
-    treeViewCountry->setObjectName("treeViewCountry");
-    treeViewCountry->setModel(modelCountry);
-    treeViewCountry->setMinimumWidth(230);
-    treeViewCountry->setSelectionModel(modelSelectionCountry);
-    treeViewCountry->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    treeViewCountry->installEventFilter(this);
+    treeCountry->setObjectName("treeCountry");
+    treeCountry->setModel(modelCountry);
+    treeCountry->setMinimumWidth(230);
+    treeCountry->setSelectionModel(modelSelectionCountry);
+    treeCountry->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    treeCountry->installEventFilter(this);
 
-    treeViewCity->setObjectName("treeViewCity");
-    treeViewCity->setRootIsDecorated(false);
-    treeViewCity->setAlternatingRowColors(true);
-    treeViewCity->setModel(modelCity);
-    treeViewCity->setSelectionModel(modelSelectionCity);
-    treeViewCity->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    treeViewCity->installEventFilter(this);
+    treeCity->setObjectName("treeCity");
+    treeCity->setRootIsDecorated(false);
+    treeCity->setAlternatingRowColors(true);
+    treeCity->setModel(modelCity);
+    treeCity->setSelectionModel(modelSelectionCity);
+    treeCity->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    treeCity->installEventFilter(this);
 
     filter = new CFilter(this);
     filter->setObjectName("filter");
     filter->setPlaceholderText("Введите наименование");
     filter->installEventFilter(this);
-    filter->setValidator(new QRegExpValidator(QRegExp(trUtf8("[а-яА-Яa-zA-Z0-9_]+")), this));
+    filter->setValidator(new QRegExpValidator(QRegExp(trUtf8("[а-яА-Яa-zA-Z0-9_ ]+")), this));
     ui->hLayoutSearchToItem->addWidget(filter);
 
     ui->labelCurrentUser->setText(QString("Пользователь: <b><u>" + currentUser() + "</u></b>"));
 
-    mc.idCity      = -1;
+    actualRecords = false;
+    focusedWidget = nullptr;
+
+    mc.codeCity    = -1;
     mc.nameCity    = QString("");
-    mc.idCountry   = -1;
+    mc.codeCountry = -1;
     mc.nameCountry = QString("");
 
     root = new QStandardItem(QString("Страны и города"));
@@ -75,14 +77,17 @@ CCountryCity::CCountryCity(QWidget *parent  /* = 0 */) :
     modelCountry->insertColumns(0, COUNTRY_MODEL_COLUMN_COUNT);
     modelCountry->setItem(0, 0, root);
 
-    QFont font(treeViewCountry->font());
+    QFont font(treeCountry->font());
           font.setBold (true);
     modelCountry->setData(modelCountry->index(0, 0), font, Qt::FontRole);
     modelCountry->setHeaderData(0, Qt::Horizontal, QObject::tr("Наименование"));
 
-    QVector<int> vector;
-    columnHidden(treeViewCountry, modelCountry, vector << 1 << 2 << 3);
-                 vector.clear();
+    QVector<int> storage;
+                 storage.append(1);
+                 storage.append(2);
+                 storage.append(3);
+    CDictionaryCore::columnHidden(treeCountry, modelCountry, storage);
+                 storage.clear();
 
     root->setChild(modelCountry->rowCount(root->index()), new QStandardItem("Загрузка..."));
 
@@ -93,19 +98,16 @@ CCountryCity::CCountryCity(QWidget *parent  /* = 0 */) :
     modelCity->setHeaderData(3, Qt::Horizontal, QObject::tr("Name"));
     modelCity->setHeaderData(4, Qt::Horizontal, QObject::tr("Телефон/Код"));
 
-    columnHidden(treeViewCity, modelCity, vector << 0);
-                 vector.clear();
+                 storage.append(0);
+    CDictionaryCore::columnHidden(treeCity, modelCity, storage);
+                 storage.clear();
 
-    connect(treeViewCountry, SIGNAL(expanded(QModelIndex)),  SLOT(slotFillGroup(QModelIndex)));
-    connect(treeViewCountry, SIGNAL(collapsed(QModelIndex)), SLOT(slotClearGroup(QModelIndex)));
-    connect(treeViewCountry, SIGNAL(clicked(QModelIndex)),   SLOT(slotFillCities(QModelIndex)));
+    connect(treeCountry, SIGNAL(expanded(QModelIndex)),  SLOT(slotFillGroup(QModelIndex)));
+    connect(treeCountry, SIGNAL(collapsed(QModelIndex)), SLOT(slotClearGroup(QModelIndex)));
+    connect(treeCountry, SIGNAL(clicked(QModelIndex)),   SLOT(slotFillCities(QModelIndex)));
 
-    connect(countryDialog, SIGNAL(saveDataChanged()), this, SLOT(slotInsertOrUpdateRecords()));
-    connect(cityDialog, SIGNAL(saveDataChanged()), this, SLOT(slotInsertOrUpdateRecords()));
-
-    connect(addItem->ui->buttonSave, SIGNAL(clicked()), countryDialog, SLOT(show()));
-    connect(addItem->ui->buttonSave, SIGNAL(clicked()), SLOT(slotFillFormSelectedRecord()));
-    connect(addItem->ui->buttonSave, SIGNAL(clicked()), addItem, SLOT(close()));
+    connect(countryDialog, SIGNAL(saveDataChanged(QList<QString>)), this, SLOT(slotInsertOrUpdateRecords(QList<QString>)));
+    connect(cityDialog,    SIGNAL(saveDataChanged(QList<QString>)), this, SLOT(slotInsertOrUpdateRecords(QList<QString>)));
 
     connect(filter, SIGNAL(textChanged(QString)), SLOT(slotFindCities(QString)));
 
@@ -116,11 +118,10 @@ CCountryCity::CCountryCity(QWidget *parent  /* = 0 */) :
 
 CCountryCity::~CCountryCity()
 {
-    if (IS_VALID_PTR(focusedWidget))        { delete focusedWidget;            focusedWidget  = nullptr; }
-    if (IS_VALID_PTR(addItem))              { delete addItem;                  addItem        = nullptr; }
+    if (IS_VALID_PTR(focusedWidget))          { delete focusedWidget;          focusedWidget          = nullptr; }
 
-    if (IS_VALID_PTR(cityDialog))           { delete cityDialog;               cityDialog     = nullptr; }
-    if (IS_VALID_PTR(countryDialog))        { delete countryDialog;            countryDialog  = nullptr; }
+    if (IS_VALID_PTR(countryDialog))          { delete countryDialog;          countryDialog          = nullptr; }
+    if (IS_VALID_PTR(cityDialog))             { delete cityDialog;             cityDialog             = nullptr; }
 
     if (IS_VALID_PTR(modelSelectionCity))     { delete modelSelectionCity;     modelSelectionCity     = nullptr; }
     if (IS_VALID_PTR(modelSelectionCountry))  { delete modelSelectionCountry;  modelSelectionCountry  = nullptr; }
@@ -132,20 +133,41 @@ CCountryCity::~CCountryCity()
 
 bool CCountryCity::eventFilter(QObject *object, QEvent *event)
 {
-    if (object == qobject_cast<QTreeView*>(treeViewCountry)) {
+    if (object == qobject_cast<CCountryTreeView*>(treeCountry)) {
         if (event->type() == QEvent::FocusIn){
             focusedWidget = focusWidget();
+
+            for (QAction *action : getContextMenu()->actions()){
+                disconnect(action, SIGNAL(triggered()), 0, 0);
+            }
+
+            connect(getContextMenu()->actions().at(0), SIGNAL(triggered()), SLOT(slotCreateEditDialog()));
+            connect(getContextMenu()->actions().at(2), SIGNAL(triggered()), SLOT(slotDeleteRecords()));
+            connect(getContextMenu()->actions().at(3), SIGNAL(triggered()), SLOT(slotRefreshRecordsCountry()));
+
             return false;
         } else if (event->type() == QEvent::FocusOut){
-            treeViewCountry->clearFocus();
+            treeCountry->clearFocus();
             return false;
         }
-    } else if (object == qobject_cast<CCityTreeView*>(treeViewCity)) {
+    } else if (object == qobject_cast<CCityTreeView*>(treeCity)) {
         if (event->type() == QEvent::FocusIn){
             focusedWidget = focusWidget();
+
+            for (QAction *action : getContextMenu()->actions()){
+                disconnect(action, SIGNAL(triggered()), 0, 0);
+            }
+
+            connect(getContextMenu()->actions().at(0), SIGNAL(triggered()), SLOT(slotCreateEditDialog()));
+            connect(getContextMenu()->actions().at(2), SIGNAL(triggered()), SLOT(slotCutRecords()));
+            connect(getContextMenu()->actions().at(3), SIGNAL(triggered()), SLOT(slotCopyRecords()));
+            connect(getContextMenu()->actions().at(4), SIGNAL(triggered()), SLOT(slotPasteRecords()));
+            connect(getContextMenu()->actions().at(5), SIGNAL(triggered()), SLOT(slotDeleteRecords()));
+            connect(getContextMenu()->actions().at(7), SIGNAL(triggered()), SLOT(slotRefreshRecordsCity()));
+
             return false;
         } else if (event->type() == QEvent::FocusOut){
-            treeViewCity->clearFocus();
+            treeCity->clearFocus();
             return false;
         }
     }
@@ -212,7 +234,7 @@ void CCountryCity::slotFillGroup(const QModelIndex &index)
     }
 
     list.append((int)actualRecords);
-    list.append((int)SKIP); // parameter skip
+    list.append(SKIP); // parameter skip
     stored.setForwardOnly(true);
     stored = execStored(currentDatabase(), "ReadAllCountries", storageHashTable(list));
 
@@ -235,8 +257,10 @@ void CCountryCity::slotFillCities(const QModelIndex &index)
         QApplication::setOverrideCursor(QCursor(QPixmap("data/picture/additionally/wait.png")));
 #endif
 
+        const int code = index.sibling(index.row(), 1).data().toInt();
+
         list.append((int)actualRecords);
-        list.append((int)index.sibling(index.row(), 1).data().toInt());
+        list.append(code);
         stored.setForwardOnly(true);
         stored = execStored(currentDatabase(), "crm_ReadAllCities", storageHashTable(list));
 
@@ -263,7 +287,6 @@ void CCountryCity::slotClearGroup(const QModelIndex &index)
             modelCountry->removeRows(1, modelCountry->rowCount(index), index);
     }
     modelCountry->itemFromIndex(index)->setChild(modelCountry->rowCount(index), new QStandardItem("Загрузка..."));
-
 }
 
 void CCountryCity::slotActualRecords(const bool &actual)
@@ -337,32 +360,20 @@ void CCountryCity::fillCityModel(QSqlQuery &stored)
 #endif
 }
 
-void CCountryCity::columnHidden(QTreeView *view, QStandardItemModel *model, const QVector<int> &vector)
-{
-    QVector<int>::const_iterator it = vector.begin();
-    while(it != vector.end()){
-        for (int i = 0; i != model->columnCount(); ++i){
-            if (i == *it)
-                 view->setColumnHidden(i, true);
-        }
-        ++it;
-    }
-}
-
 void CCountryCity::slotCutRecords()
 {
     if (currentDatabase().isOpen()) {
 
         if IS_VALID_PTR(focusedWidget){
 
-            if (focusedWidget->objectName() == treeViewCity->objectName()){
+            if (focusedWidget->objectName() == treeCity->objectName()){
                 if (modelSelectionCountry->currentIndex() == root->index()){
                     CCommunicate::showing(QString("Не удается выполнить, страна не выбрана"));
                     return;
                 }
             }
 
-            if (focusedWidget->objectName() == treeViewCountry->objectName()){
+            if (focusedWidget->objectName() == treeCountry->objectName()){
                 if (modelSelectionCountry->isSelected(modelSelectionCountry->currentIndex()) ||
                         modelCountry->hasChildren(modelSelectionCountry->currentIndex())){
                     CCommunicate::showing(QString("Не удается выполнить, запрещено перемещение стран"));
@@ -370,13 +381,13 @@ void CCountryCity::slotCutRecords()
                 }
             }
 
-            if ((focusedWidget->objectName() == treeViewCity->objectName())) {
-                mc.idCity   =
+            if ((focusedWidget->objectName() == treeCity->objectName())) {
+                mc.codeCity   =
                         modelSelectionCity->currentIndex().sibling(modelSelectionCity->currentIndex().row(), 0).data().toInt();
                 mc.nameCity =
                         modelSelectionCity->currentIndex().sibling(modelSelectionCity->currentIndex().row(), 2).data().toString();
             } else {
-                mc.idCity    =  -1;
+                mc.codeCity  =  -1;
                 mc.nameCity  =  "";
             }
         } else
@@ -397,26 +408,26 @@ void CCountryCity::slotCopyRecords()
             unsigned codeCountry(0);
             unsigned codeCity(0);
 
-            if (focusedWidget->objectName() == treeViewCity->objectName()){
+            if (focusedWidget->objectName() == treeCity->objectName()){
                 codeCountry = modelSelectionCountry->currentIndex().sibling(modelSelectionCountry->currentIndex().row(), 1).data().toUInt();
                 codeCity    = modelSelectionCity->currentIndex().sibling(modelSelectionCity->currentIndex().row(), 0).data().toUInt();
             }
 
-            if (focusedWidget->objectName() == treeViewCity->objectName()){
+            if (focusedWidget->objectName() == treeCity->objectName()){
                 if (modelSelectionCountry->currentIndex() == root->index()){
                     CCommunicate::showing(QString("Не удается выполнить, страна не выбрана"));
                     return;
                 }
             }
 
-            if (focusedWidget->objectName() == treeViewCountry->objectName()){
+            if (focusedWidget->objectName() == treeCountry->objectName()){
                 if (!modelSelectionCountry->selection().isEmpty()){
                     CCommunicate::showing(QString("Не удается выполнить, запрещено копирование стран"));
                     return;
                 }
             }
 
-            if (focusedWidget->objectName() == treeViewCity->objectName()){
+            if (focusedWidget->objectName() == treeCity->objectName()){
                 if (modelSelectionCity->isSelected(modelSelectionCity->currentIndex())){
                     QMessageBox answer;
                                 answer.setText(QString("Подтверждаете копирование?"));
@@ -433,7 +444,9 @@ void CCountryCity::slotCopyRecords()
                         list.append(codeCountry);
                         stored = execStored(currentDatabase(), "CopyCity", storageHashTable(list));
                         stored.finish();
+
                         slotRefreshRecordsCity();
+
                     } else if (answer.clickedButton() == cancel){
                         answer.reject();
                     }
@@ -453,22 +466,24 @@ void CCountryCity::slotPasteRecords(void)
 
     if (currentDatabase().isOpen()) {
 
-        mc.idCountry   =
+        mc.codeCountry   =
                 modelSelectionCountry->currentIndex().sibling(modelSelectionCountry->currentIndex().row(), 1).data().toInt();
         mc.nameCountry =
                 modelSelectionCountry->currentIndex().sibling(modelSelectionCountry->currentIndex().row(), 0).data().toString();
 
         if IS_VALID_PTR(focusedWidget){
 
-            if (focusedWidget->objectName() == treeViewCountry->objectName()){
+            if ((focusedWidget->objectName() == treeCountry->objectName()) ||
+                (focusedWidget->objectName() == treeCity->objectName())){
                 if (modelSelectionCountry->currentIndex() == root->index()){
                     CCommunicate::showing(QString("Не удается выполнить, страна не выбрана"));
                     return;
                 }
             }
 
-            if (focusedWidget->objectName() == treeViewCountry->objectName()){
-                  if (modelSelectionCountry->isSelected(modelSelectionCountry->currentIndex()) &&  mc.idCity > -1) {
+            if ((focusedWidget->objectName() == treeCountry->objectName()) ||
+                (focusedWidget->objectName() == treeCity->objectName())){
+                  if (modelSelectionCountry->isSelected(modelSelectionCountry->currentIndex()) && mc.codeCity > -1) {
 
                       QMessageBox answer;
                                   answer.setText(QString("Подтверждаете перемещение?"));
@@ -481,12 +496,14 @@ void CCountryCity::slotPasteRecords(void)
                       answer.exec();
 
                       if (answer.clickedButton() == move){
-                          list.append(mc.idCity);
-                          list.append(mc.idCountry);
+                          list.append(mc.codeCity);
+                          list.append(mc.codeCountry);
                           stored = execStored(currentDatabase(), "MoveCity", storageHashTable(list));
                           stored.finish();
+
                           slotRefreshRecordsCity();
-                          mc.idCity    =  -1;
+
+                          mc.codeCity  =  -1;
                           mc.nameCity  =  "";
                       } else if (answer.clickedButton() == cancel){
                           answer.reject();
@@ -494,8 +511,8 @@ void CCountryCity::slotPasteRecords(void)
                   }
             } else
                 CCommunicate::showing(QString("Не удается выполнить, страна не выбрана"));
-        }  else
-             CCommunicate::showing(QString("Не удается выполнить, страна или город/регион не выбраны"));
+        } else
+            CCommunicate::showing(QString("Не удается выполнить, страна или город/регион не выбраны"));
     } else
         CCommunicate::showing(QString("Не удается выполнить, база данных не доступна"));
 }
@@ -513,33 +530,33 @@ void CCountryCity::slotDeleteRecords(void)
 
         if IS_VALID_PTR(focusedWidget){
 
-            if (focusedWidget->objectName() == treeViewCountry->objectName()){
+            if (focusedWidget->objectName() == treeCountry->objectName()){
                 code = modelSelectionCountry->currentIndex().sibling(modelSelectionCountry->currentIndex().row(), 1).data().toUInt();
                 name = modelSelectionCountry->currentIndex().data().toString();
-            } else if (focusedWidget->objectName() == treeViewCity->objectName()){
+            } else if (focusedWidget->objectName() == treeCity->objectName()){
                 code = modelSelectionCity->currentIndex().sibling(modelSelectionCity->currentIndex().row(), 0).data().toUInt();
                 name = modelSelectionCity->currentIndex().sibling(modelSelectionCity->currentIndex().row(), 2).data().toString();
             }
 
-            if (focusedWidget->objectName() == treeViewCountry->objectName()){
+            if (focusedWidget->objectName() == treeCountry->objectName()){
                 if (modelCountry->hasChildren(modelSelectionCountry->currentIndex())){
                     CCommunicate::showing(QString("Не удается выполнить, корневая запись"));
                     return;
                 }
             }
 
-            if (focusedWidget->objectName() == treeViewCity->objectName()){
+            if (focusedWidget->objectName() == treeCity->objectName()){
                 if (modelSelectionCountry->currentIndex() == root->index()){
                     CCommunicate::showing(QString("Не удается выполнить, страна не выбрана"));
                     return;
                 }
             }
 
-            if (focusedWidget->objectName() == treeViewCountry->objectName() &&
+            if (focusedWidget->objectName() == treeCountry->objectName() &&
                     modelSelectionCountry->isSelected(modelSelectionCountry->currentIndex())){
                 removable = true;
             }
-            if (focusedWidget->objectName() == treeViewCity->objectName() &&
+            if (focusedWidget->objectName() == treeCity->objectName() &&
                     modelSelectionCountry->isSelected(modelSelectionCountry->currentIndex()) &&
                     modelSelectionCity->isSelected(modelSelectionCity->currentIndex())){
                 removable = true;
@@ -557,11 +574,11 @@ void CCountryCity::slotDeleteRecords(void)
 
                 if (answer.clickedButton() == _delete){
                     list.append(code);
-                    if (focusedWidget->objectName() == treeViewCountry->objectName()){
+                    if (focusedWidget->objectName() == treeCountry->objectName()){
                         stored = execStored(currentDatabase(), "DeleteCountry", storageHashTable(list));
                         stored.finish();
                         slotRefreshRecordsCountry();
-                    } else if (focusedWidget->objectName() == treeViewCity->objectName()){
+                    } else if (focusedWidget->objectName() == treeCity->objectName()){
                         stored = execStored(currentDatabase(), "DeleteCity", storageHashTable(list));
                         stored.finish();
                         slotRefreshRecordsCity();
@@ -579,10 +596,10 @@ void CCountryCity::slotDeleteRecords(void)
 
 void CCountryCity::slotRefreshRecords()
 {
-    if (focusedWidget->objectName() == treeViewCountry->objectName()){
-            slotRefreshRecordsCountry();
+    if (focusedWidget->objectName() == treeCountry->objectName()){
+           slotRefreshRecordsCountry();
     } else
-    if (focusedWidget->objectName() == treeViewCity->objectName()){
+    if (focusedWidget->objectName() == treeCity->objectName()){
            slotRefreshRecordsCity();
     }
 }
@@ -597,224 +614,335 @@ void CCountryCity::slotRefreshRecordsCity()
     slotFillCities(modelSelectionCountry->currentIndex());
 }
 
-void CCountryCity::slotCreateEditDialog(const int &r)
+void CCountryCity::slotCreateEditDialog(const QString &action)
 {
     if (currentDatabase().isOpen()) {    
 
-        r == 0 ? rad = RecordActionDatabase::ardInsert
-               : rad = RecordActionDatabase::ardUpdate;
+        QString::compare(action, "add") == 0 ? act = Action::Add : act = Action::Edit;
 
         if IS_VALID_PTR(focusedWidget){
 
-            if (focusedWidget->objectName() == treeViewCountry->objectName()){
-                countryDialog->setWindowTitle(QString("Страна"));
-            } else if (focusedWidget->objectName() == treeViewCity->objectName()){
-                cityDialog->setWindowTitle(QString("Город/Регион"));
-            }
-
-            if (focusedWidget->objectName() == treeViewCountry->objectName()){
-                if (modelSelectionCountry->currentIndex() == root->index() && rad == 1){
+            if (focusedWidget->objectName() == treeCountry->objectName()){
+                if (modelSelectionCountry->currentIndex() == root->index() && act == Action::Edit){
                     CCommunicate::showing(QString("Не удается выполнить, корневая запись"));
                     return;
                 }
             }
 
-            if (focusedWidget->objectName() == treeViewCountry->objectName()){
+            if (focusedWidget->objectName() == treeCountry->objectName()){
                 if (modelSelectionCountry->selection().isEmpty()){
                     CCommunicate::showing(QString("Не удается выполнить, страна не выбрана"));
                     return;
                 }
             }
 
-            if (focusedWidget->objectName() == treeViewCity->objectName()){
+            if (focusedWidget->objectName() == treeCity->objectName()){
                 if(modelSelectionCountry->selection().isEmpty()){
                     CCommunicate::showing(QString("Не удается выполнить, страна не выбрана"));
                     return;
                 }
             }
 
-            if (focusedWidget->objectName() == treeViewCity->objectName()){
-                if (modelSelectionCountry->currentIndex() == root->index() && rad == 0){
+            if (focusedWidget->objectName() == treeCity->objectName()){
+                if (modelSelectionCountry->currentIndex() == root->index() && act == Action::Add){
                     CCommunicate::showing(QString("Не удается выполнить, страна не выбрана"));
                     return;
                 }
             }
 
-            if (focusedWidget->objectName() == treeViewCity->objectName()){
-                if (modelSelectionCountry->currentIndex() == root->index() && rad == 1){
+            if (focusedWidget->objectName() == treeCity->objectName()){
+                if (modelSelectionCountry->currentIndex() == root->index() && act == Action::Edit){
                     CCommunicate::showing(QString("Не удается выполнить, страна не выбрана"));
                     return;
                 }
             }
 
-            if (focusedWidget->objectName() == treeViewCity->objectName()){
-                if(!modelSelectionCity->isSelected(modelSelectionCity->currentIndex()) && rad == 1){
+            if (focusedWidget->objectName() == treeCity->objectName()){
+                if(!modelSelectionCity->isSelected(modelSelectionCity->currentIndex()) && act == Action::Edit){
                     CCommunicate::showing(QString("Не удается выполнить, город/регион не выбран"));
                     return;
                 }
             }
 
-            if (fillFormSelectedRecord()){
-                if (focusedWidget->objectName() == treeViewCountry->objectName()){
-                    if (rad == 0) {
-                        addItem->show();
-                        modelSelectionCountry->currentIndex() == root->index() ? addItem->ui->radioNewSubCatalog->setEnabled(false)
-                                                                               : addItem->ui->radioNewSubCatalog->setEnabled(true);
-                    } else
+            if (focusedWidget->objectName() == treeCountry->objectName()){
+                if (modelSelectionCountry->currentIndex() != root->index()){
+
+                    QList<QString>  param;
+                    if (fillListSelectedRecord(param)){
+                        countryDialog->fillFormSelectedRecord(param, act);
                         countryDialog->show();
-                } else if (focusedWidget->objectName() == treeViewCity->objectName()){
-                    cityDialog->show();
+                    }
                 }
-            }
+            } else if (focusedWidget->objectName() == treeCity->objectName()){
+
+                    QList<QString>  param;
+                    if (fillListSelectedRecord(param)){
+                        cityDialog->fillFormSelectedRecord(param, act);
+                        cityDialog->show();
+                    }
+              }
         } else
-        CCommunicate::showing(QString("Не удается выполнить, страна или город/регион не выбраны"));
+            CCommunicate::showing(QString("Не удается выполнить, страна или город/регион не выбраны"));
     } else
-    CCommunicate::showing(QString("Не удается выполнить, база данных не доступна"));
+        CCommunicate::showing(QString("Не удается выполнить, база данных не доступна"));
 }
 
-bool CCountryCity::fillFormSelectedRecord()
+void CCountryCity::slotCreateEditDialog(void)
+{
+    slotCreateEditDialog("edit");
+}
+
+bool CCountryCity::fillListSelectedRecord(QList<QString> &param)
 {
     QList<QVariant> list;
     QSqlQuery       stored;
 
-    if (focusedWidget->objectName() == treeViewCountry->objectName()){
-        if (rad == 0){
-            countryDialog->ui->labelUserD->setText(QString("Нет данных"));
-            countryDialog->ui->labelDateD->setText(QString("Нет данных"));
-        } else if (rad == 1){
+    if (focusedWidget->objectName() == treeCountry->objectName()){
 
-            list.append(modelSelectionCountry->currentIndex().sibling(modelSelectionCountry->currentIndex().row(), 1).data().toUInt());
+        if (act == Action::Add){
+
+            param.append("Нет данных");
+            param.append("Нет данных");
+
+        } else if (act == Action::Edit){
+
+            const int code = modelSelectionCountry->currentIndex().sibling(modelSelectionCountry->currentIndex().row(), 1).data().toUInt();
+
+            list.append(code);
             stored.setForwardOnly(true);
             stored = execStored(currentDatabase(), "ReadOneCountry", storageHashTable(list));
 
             if (stored.numRowsAffected() > 0) {
                 while (stored.next()) {
-                    countryDialog->setWindowTitle(QString(countryDialog->windowTitle() + " - [ %1 ]").arg(stored.value(stored.record().indexOf("cty_name_first")).toString()));
-                    countryDialog->ui->lineEditName->setText(stored.value(stored.record().indexOf("cty_name_first")).toString());
-                    countryDialog->ui->lineEditNameEng->setText(stored.value(stored.record().indexOf("cty_name_second")).toString());
-                    countryDialog->ui->lineEditCityCode->setText(stored.value(stored.record().indexOf("cty_phone_code")).toString());
-                    countryDialog->ui->checkBoxActual->setChecked(stored.value(stored.record().indexOf("cty_actual")).toBool());
-                    countryDialog->ui->labelUserD->setText(stored.value(stored.record().indexOf("cty_muser")).toString());
-                    countryDialog->ui->labelDateD->setText(stored.value(stored.record().indexOf("cty_mdate")).toDateTime().toString("yyyy-MM-dd hh:mm:ss"));
+                    const QString namef  = stored.value(stored.record().indexOf("cty_name_first")).toString();
+                    const QString namee  = stored.value(stored.record().indexOf("cty_name_second")).toString();
+                    const QString phone  = stored.value(stored.record().indexOf("cty_phone_code")).toString();
+                    const bool    actual = stored.value(stored.record().indexOf("cty_actual")).toBool();
+                    const QString user   = stored.value(stored.record().indexOf("cty_muser")).toString();
+                    const QString date   = stored.value(stored.record().indexOf("cty_mdate")).toDateTime().toString("yyyy-MM-dd hh:mm:ss");
+
+                    param.append(namef);
+                    param.append(namee);
+                    param.append(phone);
+                    param.append(QVariant(actual).toString());
+                    param.append(user);
+                    param.append(date);
                 }
             } else {
                 CCommunicate::showing(QString("Не удается выполнить, документ либо его элемент был удален другим пользователем"));
                 return false;
             }
         }
-    } else if (focusedWidget->objectName() == treeViewCity->objectName()){
-                    cityDialog->ui->lineEditCountry->setText(modelSelectionCountry->currentIndex().sibling(modelSelectionCountry->currentIndex().row(), 0).data(Qt::DisplayRole).toString());
-                    cityDialog->ui->lineEditCountry->setReadOnly(true);
+    } else if (focusedWidget->objectName() == treeCity->objectName()){
 
-            if (rad == 0){
+        if (act == Action::Add){
 
-                cityDialog->ui->labelUserD->setText(QString("Нет данных"));
-                cityDialog->ui->labelDateD->setText(QString("Нет данных"));
+            const QString name = modelSelectionCountry->currentIndex().sibling(modelSelectionCountry->currentIndex().row(), 0).data().toString();
+            param.append(name);
 
-                list.append(modelSelectionCountry->currentIndex().sibling(modelSelectionCountry->currentIndex().row(), 1).data().toUInt());
-                stored.setForwardOnly(true);
-                stored = execStored(currentDatabase(), "ReadOneCountry", storageHashTable(list));
+            const int code = modelSelectionCountry->currentIndex().sibling(modelSelectionCountry->currentIndex().row(), 1).data().toUInt();
 
+            list.append(code);
+            stored.setForwardOnly(true);
+            stored = execStored(currentDatabase(), "ReadOneCountry", storageHashTable(list));
+
+            while (stored.next()) {
+                const QString code = stored.value(stored.record().indexOf("cty_phone_code")).toString();
+                param.append(code);
+            }
+
+            param.append("Нет данных");
+            param.append("Нет данных");
+
+        } else if (act == Action::Edit){
+
+            const int code = modelSelectionCity->currentIndex().sibling(modelSelectionCity->currentIndex().row(), 0).data().toUInt();
+
+            list.append(code);
+            stored.setForwardOnly(true);
+            stored = execStored(currentDatabase(), "ReadOneCity", storageHashTable(list));
+
+            if (stored.numRowsAffected() > 0) {
                 while (stored.next()) {
-                    cityDialog->ui->lineEditCountryCode->setText(stored.value(stored.record().indexOf("cty_phone_code")).toString());
+
+                    const QString namecof  = stored.value(stored.record().indexOf("cty_name_first")).toString();
+                    const QString namecif  = stored.value(stored.record().indexOf("cit_name_first")).toString();
+                    const QString namee    = stored.value(stored.record().indexOf("cit_name_second")).toString();
+                    const QString phonecty = stored.value(stored.record().indexOf("cty_phone_code")).toString();
+                    const QString phonecit = stored.value(stored.record().indexOf("cit_phone_code")).toString();
+                    const bool    actual   = stored.value(stored.record().indexOf("cit_actual")).toBool();
+                    const QString user     = stored.value(stored.record().indexOf("cit_muser")).toString();
+                    const QString date     = stored.value(stored.record().indexOf("cit_mdate")).toDateTime().toString("yyyy-MM-dd hh:mm:ss");
+
+                    param.append(namecof);
+                    param.append(namecif);
+                    param.append(namee);
+                    param.append(phonecty);
+                    param.append(phonecit);
+                    param.append(QVariant(actual).toString());
+                    param.append(user);
+                    param.append(date);
                 }
-
-            } else if (rad == 1){
-
-                    list.append(modelSelectionCity->currentIndex().sibling(modelSelectionCity->currentIndex().row(), 0).data().toUInt());
-                    stored.setForwardOnly(true);
-                    stored = execStored(currentDatabase(), "ReadOneCity", storageHashTable(list));
-
-
-                    if (stored.numRowsAffected() > 0) {
-                        while (stored.next()) {
-                            cityDialog->setWindowTitle(QString(cityDialog->windowTitle() + " - [ %1 ]").arg(stored.value(stored.record().indexOf("cit_name_first")).toString()));
-                            cityDialog->ui->lineEditCountry->setText(stored.value(stored.record().indexOf("cty_name_first")).toString());
-                            cityDialog->ui->lineEditName->setText(stored.value(stored.record().indexOf("cit_name_first")).toString());
-                            cityDialog->ui->lineEditNameEng->setText(stored.value(stored.record().indexOf("cit_name_second")).toString());
-                            cityDialog->ui->lineEditCityCode->setText(stored.value(stored.record().indexOf("cit_phone_code")).toString());
-                            cityDialog->ui->lineEditCountryCode->setText(stored.value(stored.record().indexOf("cty_phone_code")).toString());
-                            cityDialog->ui->checkBoxActual->setChecked(stored.value(stored.record().indexOf("cit_actual")).toBool());
-                            cityDialog->ui->labelUserD->setText(stored.value(stored.record().indexOf("cit_muser")).toString());
-                            cityDialog->ui->labelDateD->setText(stored.value(stored.record().indexOf("cit_mdate")).toDateTime().toString("yyyy-MM-dd hh:mm:ss"));
-                        }
-                    } else {
-                        CCommunicate::showing(QString("Не удается выполнить, документ либо его элемент был удален другим пользователем"));
-                        return false;
-                    }
-                }
+            } else {
+                CCommunicate::showing(QString("Не удается выполнить, документ либо его элемент был удален другим пользователем"));
+                return false;
+            }
+        }
         }
     stored.finish();
     return true;
 }
 
-void CCountryCity::slotInsertOrUpdateRecords(void)
+QMenu *CCountryCity::getContextMenu() const
+{
+    if (focusedWidget->objectName() == treeCountry->objectName()){
+        return treeCountry->menu;
+    } else if (focusedWidget->objectName() == treeCity->objectName()){
+        return treeCity->menu;
+    }
+    return nullptr;
+}
+
+void CCountryCity::slotInsertOrUpdateRecords(const QList<QString> &param)
 {
     QList<QVariant> list;
     QSqlQuery       stored;
 
-    if (focusedWidget->objectName() == treeViewCountry->objectName()){
-        if (rad == 0){
-            if (addItem->ui->radioNewCatalog->isChecked()){
-                list.append((int)0);
-            } else
-            list.append(modelSelectionCountry->currentIndex().sibling(modelSelectionCountry->currentIndex().row(), 1).data().toUInt());
-            list.append(countryDialog->ui->lineEditName->text());
-            list.append(countryDialog->ui->lineEditNameEng->text());
-            list.append(countryDialog->ui->lineEditCityCode->text());
-            list.append((int)countryDialog->ui->checkBoxActual->isChecked());
+    if (focusedWidget->objectName() == treeCountry->objectName()){
+        const int code = modelSelectionCountry->currentIndex().sibling(modelSelectionCountry->currentIndex().row(), 1).data().toUInt();
+
+        list.append(code);
+        list.append(param.at(0));
+        list.append(param.at(1));
+        list.append(param.at(2));
+        list.append(QVariant(param.at(3)).toBool());
+
+        if (act == Action::Add){
             stored = execStored(currentDatabase(), "InsertCountry", storageHashTable(list));
-            stored.finish();
-        } else if (rad == 1){
-            list.append(modelSelectionCountry->currentIndex().sibling(modelSelectionCountry->currentIndex().row(), 1).data().toUInt());
-            list.append(countryDialog->ui->lineEditName->text());
-            list.append(countryDialog->ui->lineEditNameEng->text());
-            list.append(countryDialog->ui->lineEditCityCode->text());
-            list.append((int)countryDialog->ui->checkBoxActual->isChecked());
-            stored = execStored(currentDatabase(), "UpdateCountry", storageHashTable(list));
-            stored.finish();
+        } else if (act == Action::Edit){
+            stored = execStored(currentDatabase(), "UpdateCountry", storageHashTable(list));     
         }
+        stored.finish();
+
         slotRefreshRecordsCountry();
-        clearEditDialog(countryDialog);
+        CDictionaryCore::clearEditDialog(countryDialog);
     }
-    else if (focusedWidget->objectName() == treeViewCity->objectName()){
-        if (rad == 0){
-            list.append(modelSelectionCountry->currentIndex().sibling(modelSelectionCountry->currentIndex().row(), 1).data().toUInt());
-            list.append(cityDialog->ui->lineEditName->text());
-            list.append(cityDialog->ui->lineEditNameEng->text());
-            list.append(cityDialog->ui->lineEditCityCode->text());
-            list.append((int)cityDialog->ui->checkBoxActual->isChecked());
-            stored = execStored(currentDatabase(), "InsertCity", storageHashTable(list));
-            stored.finish();
-        } else if (rad == 1){
-            list.append(modelSelectionCity->currentIndex().sibling(modelSelectionCity->currentIndex().row(), 0).data().toUInt());
-            list.append(cityDialog->ui->lineEditName->text());
-            list.append(cityDialog->ui->lineEditNameEng->text());
-            list.append(cityDialog->ui->lineEditCityCode->text());
-            list.append((int)cityDialog->ui->checkBoxActual->isChecked());
-            stored = execStored(currentDatabase(), "UpdateCity", storageHashTable(list));
-            stored.finish();
+    else if (focusedWidget->objectName() == treeCity->objectName()){
+
+        if (act == Action::Add){
+           const int code = modelSelectionCountry->currentIndex().sibling(modelSelectionCountry->currentIndex().row(), 1).data().toUInt();
+           list.append(code);
+        } else if (act == Action::Edit){
+           const int code = modelSelectionCity->currentIndex().sibling(modelSelectionCity->currentIndex().row(), 0).data().toUInt();
+           list.append(code);
         }
+
+        list.append(param.at(0));
+        list.append(param.at(1));
+        list.append(param.at(2));
+        list.append(QVariant(param.at(3)).toBool());
+
+        if (act == Action::Add){
+            stored = execStored(currentDatabase(), "InsertCity", storageHashTable(list));
+        } else if (act == Action::Edit){
+            stored = execStored(currentDatabase(), "UpdateCity", storageHashTable(list));
+        }
+        stored.finish();
+
         slotRefreshRecordsCity();
-        clearEditDialog(cityDialog);
+        CDictionaryCore::clearEditDialog(cityDialog);
     }
 }
 
 CCityTreeView::CCityTreeView(QWidget *parent) :
     QTreeView(parent)
+  , menu(new QMenu(parent))
 {
+    setContextMenuPolicy(Qt::CustomContextMenu);
+
+    menu->addAction(new QAction(QObject::tr("Открыть документ"), this));
+    menu->addSeparator();
+    menu->addAction(new QAction(QObject::tr("Вырезать"), this));
+    menu->addAction(new QAction(QObject::tr("Копировать"), this));
+    menu->addAction(new QAction(QObject::tr("Вставить"), this));
+    menu->addAction(new QAction(QObject::tr("Удалить"), this));
+    menu->addSeparator();
+    menu->addAction(new QAction(QObject::tr("Обновить"), this));
+
+    connect(this, SIGNAL(customContextMenuRequested(const QPoint &)),
+            SLOT(slotCustomContextMenuRequested(const QPoint &)));
+}
+
+CCityTreeView::~CCityTreeView()
+{
+    if IS_VALID_PTR(menu) { menu = nullptr; }
+}
+
+void CCityTreeView::slotCustomContextMenuRequested(const QPoint &pos)
+{
+    for (QAction *action : menu->actions()){
+            action->setEnabled(true);
+    }
+    menu->setStyleSheet("QMenu {"
+                                "background-color: #f4f4f4;"
+                                "margin: 0px;"
+                                "border: 1px solid #515151;"
+                        "}"
+                        "QMenu::item {"
+                                "padding: 2px 25px 2px 20px;"
+                                "border: 1px solid transparent;"
+                        "}"
+                        "QMenu::item:selected {"
+                                "color: #ffffff;"
+                                "background-color: #68a44a;"
+                        "}"
+                        "QMenu::separator {"
+                                "height: 1px;"
+                                "background: #aaaaaa;"
+                                "margin-left: 10px;"
+                                "margin-right: 5px;"
+                        "}"
+                        "QMenu::indicator {"
+                                "width:  10px;"
+                                "height: 10px;"
+                        "}");
+    QModelIndex index = indexAt(pos);
+    QVector<int> disable;
+    if (index.isValid()){
+            disable.append(4);
+            disable.append(7);
+    } else {
+            disable.append(0);
+            disable.append(2);
+            disable.append(3);
+            disable.append(5);
+    }
+    for (auto i = disable.begin(); i != disable.end(); ++i){
+        if (disable.contains(*i)){
+            menu->actions().at(*i)->setEnabled(false);
+        }
+    }
+    menu->exec(viewport()->mapToGlobal(pos));
 }
 
 void CCityTreeView::mousePressEvent(QMouseEvent *event)
 {
     if (event->buttons() == Qt::LeftButton){
-       startPosition = event->pos();
+        startPosition = event->pos();
     }
+
     QTreeView::mousePressEvent(event);
 }
 
 void CCityTreeView::mouseMoveEvent(QMouseEvent *event)
 {
+    if (!(event->buttons() & Qt::LeftButton))
+        return;
+
+    if ((event->pos() - startPosition).manhattanLength()
+            < QApplication::startDragDistance())
+        return;
+
     if (event->buttons() == Qt::LeftButton){
         int distance = (event->pos() - startPosition).manhattanLength();
         if (distance >= QApplication::startDragDistance()){
@@ -826,21 +954,29 @@ void CCityTreeView::mouseMoveEvent(QMouseEvent *event)
 
 void CCityTreeView::dragEnterEvent(QDragEnterEvent *event)
 {
-    CCityTreeView *source = qobject_cast<CCityTreeView*>(event->source());
+    QLineEdit *source = qobject_cast<QLineEdit*>(event->source());
 
-    if (source && source != this){
-        event->setDropAction(Qt::MoveAction);
-        event->accept();
+    if (source){
+        if (QString::compare(source->objectName(), "editCity") == 0){
+            source->setReadOnly(false);
+
+            event->setDropAction(Qt::MoveAction);
+            event->accept();
+        }
     }
 }
 
 void CCityTreeView::dragMoveEvent(QDragMoveEvent *event)
 {
-    CCityTreeView *source = qobject_cast<CCityTreeView*>(event->source());
+    QLineEdit *source = qobject_cast<QLineEdit*>(event->source());
 
-    if (source && source != this){
-        event->setDropAction(Qt::MoveAction);
-        event->accept();
+    if (source){
+        if (QString::compare(source->objectName(), "editCity") == 0){
+            source->setReadOnly(false);
+
+            event->setDropAction(Qt::MoveAction);
+            event->accept();
+        }
     }
 }
 
@@ -869,4 +1005,68 @@ void CCityTreeView::draging()
     if (drag->exec(Qt::MoveAction) == Qt::MoveAction)
          delete item;
     }
+}
+
+CCountryTreeView::CCountryTreeView(QWidget *parent) :
+    QTreeView(parent)
+  , menu(new QMenu(parent))
+{
+    setContextMenuPolicy(Qt::CustomContextMenu);
+
+    menu->addAction(new QAction(QObject::tr("Открыть документ"), this));
+    menu->addSeparator();
+    menu->addAction(new QAction(QObject::tr("Удалить"), this));
+    menu->addAction(new QAction(QObject::tr("Обновить"), this));
+
+    connect(this, SIGNAL(customContextMenuRequested(const QPoint &)),
+            SLOT(slotCustomContextMenuRequested(const QPoint &)));
+}
+
+CCountryTreeView::~CCountryTreeView()
+{
+    if IS_VALID_PTR(menu) { menu = nullptr; }
+}
+
+void CCountryTreeView::slotCustomContextMenuRequested(const QPoint &pos)
+{
+    for (QAction *action : menu->actions()){
+            action->setEnabled(true);
+    }
+    menu->setStyleSheet("QMenu {"
+                                "background-color: #f4f4f4;"
+                                "margin: 0px;"
+                                "border: 1px solid #515151;"
+                        "}"
+                        "QMenu::item {"
+                                "padding: 2px 25px 2px 20px;"
+                                "border: 1px solid transparent;"
+                        "}"
+                        "QMenu::item:selected {"
+                                "color: #ffffff;"
+                                "background-color: #68a44a;"
+                        "}"
+                        "QMenu::separator {"
+                                "height: 1px;"
+                                "background: #aaaaaa;"
+                                "margin-left: 10px;"
+                                "margin-right: 5px;"
+                        "}"
+                        "QMenu::indicator {"
+                                "width:  10px;"
+                                "height: 10px;"
+                        "}");
+    QModelIndex index = indexAt(pos);
+    QVector<int> disable;
+    if (index.isValid()){
+            disable.append(3);
+    } else {
+            disable.append(0);
+            disable.append(2);
+    }
+    for (QVector<int>::const_iterator i = disable.begin(); i != disable.end(); ++i){
+        if (disable.contains(*i)){
+            menu->actions().at(*i)->setEnabled(false);
+        }
+    }
+    menu->exec(viewport()->mapToGlobal(pos));
 }

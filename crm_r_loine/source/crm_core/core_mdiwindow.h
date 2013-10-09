@@ -19,8 +19,6 @@ public:
 
 protected:
     void closeEvent(QCloseEvent *event);
-
-
 };
 
 #endif // MDIWINDOW_H

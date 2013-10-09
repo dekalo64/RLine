@@ -1,21 +1,54 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Suppliers</class>
- <widget class="QWidget" name="Suppliers">
+ <class>CSuppliers</class>
+ <widget class="QWidget" name="CSuppliers">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
     <width>726</width>
-    <height>373</height>
+    <height>250</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
+   <item row="1" column="0">
+    <layout class="QHBoxLayout" name="hLayoutTreeView"/>
+   </item>
    <item row="0" column="0">
-    <widget class="QTreeView" name="treeViewSuppliers"/>
+    <layout class="QHBoxLayout" name="hLayoutSearchToItem"/>
+   </item>
+   <item row="2" column="0">
+    <layout class="QHBoxLayout" name="hLayoutInformation">
+     <item alignment="Qt::AlignLeft|Qt::AlignBottom">
+      <widget class="QLabel" name="labelCurrentUser">
+       <property name="font">
+        <font>
+         <weight>50</weight>
+         <bold>false</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>TextLabel</string>
+       </property>
+      </widget>
+     </item>
+     <item alignment="Qt::AlignRight|Qt::AlignBottom">
+      <widget class="QLabel" name="labelViewState">
+       <property name="font">
+        <font>
+         <weight>50</weight>
+         <bold>false</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>TextLabel</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
   </layout>
  </widget>

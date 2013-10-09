@@ -12,19 +12,19 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>289</width>
+    <width>280</width>
     <height>136</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>289</width>
+    <width>280</width>
     <height>136</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>289</width>
+    <width>280</width>
     <height>136</height>
    </size>
   </property>
@@ -90,14 +90,13 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>10</pointsize>
-         <weight>50</weight>
-         <bold>false</bold>
+         <family>Arial</family>
+         <pointsize>9</pointsize>
         </font>
        </property>
       </widget>
      </item>
-     <item row="0" column="0">
+     <item row="0" column="0" alignment="Qt::AlignRight">
       <widget class="QLabel" name="labelLogin">
        <property name="font">
         <font>
@@ -108,11 +107,11 @@
         </font>
        </property>
        <property name="text">
-        <string>Логин</string>
+        <string>Логин:</string>
        </property>
       </widget>
      </item>
-     <item row="1" column="0">
+     <item row="1" column="0" alignment="Qt::AlignRight">
       <widget class="QLabel" name="labelPassword">
        <property name="font">
         <font>
@@ -123,7 +122,7 @@
         </font>
        </property>
        <property name="text">
-        <string>Пароль</string>
+        <string>Пароль:</string>
        </property>
       </widget>
      </item>
@@ -143,9 +142,8 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>10</pointsize>
-         <weight>50</weight>
-         <bold>false</bold>
+         <family>Arial</family>
+         <pointsize>9</pointsize>
         </font>
        </property>
        <property name="frame">
@@ -232,13 +230,13 @@
      <property name="font">
       <font>
        <family>Arial</family>
-       <pointsize>11</pointsize>
+       <pointsize>9</pointsize>
        <weight>75</weight>
        <bold>true</bold>
       </font>
      </property>
      <property name="text">
-      <string>Авторизация</string>
+      <string>АВТОРИЗАЦИЯ</string>
      </property>
     </widget>
    </item>

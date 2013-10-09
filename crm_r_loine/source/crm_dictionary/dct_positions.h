@@ -16,31 +16,35 @@
 
 #define  POSITIONS_MODEL_COLUMN_COUNT 3
 
-class Positions : public CCppsst
+class CPositions : public CCppsst
 {
     Q_OBJECT
 
 public:
-    explicit Positions(QWidget *parent = 0);
-    virtual ~Positions();
+    explicit CPositions(QWidget *parent = 0);
+    virtual ~CPositions();
 
     bool actualRecords;
+
+protected:
+    bool eventFilter(QObject *object, QEvent *event);
 
 private:
     QStandardItemModel    *modelPositions;
     QItemSelectionModel   *modelSelectionPositions;
 
     void fillPositionsModel(QSqlQuery &stored);
-    bool fillFormSelectedRecord (void);
+    bool fillListSelectedRecord (QList<QString> &param);
 
 private slots:
     void slotFillPositions         (void);
 
-    void slotCreateEditDialog(const int &r);
+    void slotCreateEditDialog(const QString &action);
+    void slotCreateEditDialog(void);
 
     void slotActualRecords (const bool &actual);
     void slotFindPositions(const QString &text);
-    void slotInsertOrUpdateRecords (void);
+    void slotInsertOrUpdateRecords (const QList<QString> &param);
     void slotCopyRecords           (void);
     void slotDeleteRecords         (void);
     void slotRefreshRecords        (void);

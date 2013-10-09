@@ -42,12 +42,17 @@
         </font>
        </property>
        <property name="text">
-        <string>TextLabel</string>
+        <string>User</string>
        </property>
       </widget>
      </item>
      <item row="0" column="0" alignment="Qt::AlignLeft">
       <widget class="QLabel" name="labelUserI">
+       <property name="font">
+        <font>
+         <family>Arial</family>
+        </font>
+       </property>
        <property name="text">
         <string>Пользователь</string>
        </property>
@@ -64,12 +69,17 @@
         </font>
        </property>
        <property name="text">
-        <string>TextLabel</string>
+        <string>Date</string>
        </property>
       </widget>
      </item>
      <item row="0" column="1" alignment="Qt::AlignRight">
       <widget class="QLabel" name="labelDateI">
+       <property name="font">
+        <font>
+         <family>Arial</family>
+        </font>
+       </property>
        <property name="text">
         <string>Дата</string>
        </property>
@@ -83,21 +93,6 @@
       <number>6</number>
      </property>
      <item>
-      <widget class="QPushButton" name="buttonSave">
-       <property name="font">
-        <font>
-         <family>Arial</family>
-         <pointsize>9</pointsize>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="text">
-        <string>Сохранить</string>
-       </property>
-      </widget>
-     </item>
-     <item>
       <widget class="QPushButton" name="buttonCancel">
        <property name="font">
         <font>
@@ -109,6 +104,21 @@
        </property>
        <property name="text">
         <string>Отмена</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonSave">
+       <property name="font">
+        <font>
+         <family>Arial</family>
+         <pointsize>9</pointsize>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>Сохранить</string>
        </property>
       </widget>
      </item>
@@ -164,7 +174,14 @@
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="lineEditRefGroup"/>
+      <widget class="QLineEdit" name="lineEditRefGroup">
+       <property name="font">
+        <font>
+         <family>Arial</family>
+         <pointsize>9</pointsize>
+        </font>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>

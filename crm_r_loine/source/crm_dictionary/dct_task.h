@@ -16,31 +16,35 @@
 
 #define  TASK_MODEL_COLUMN_COUNT 3
 
-class TaskType : public CCppsst
+class CTaskType : public CCppsst
 {
     Q_OBJECT
 
 public:
-    explicit TaskType(QWidget *parent = 0);
-    virtual ~TaskType();
+    explicit CTaskType(QWidget *parent = 0);
+    virtual ~CTaskType();
 
     bool actualRecords;
+
+protected:
+    bool eventFilter(QObject *object, QEvent *event);
 
 private:
     QStandardItemModel    *modelTask;
     QItemSelectionModel   *modelSelectionTask;
 
     void fillTaskModel(QSqlQuery &stored);
-    bool fillFormSelectedRecord (void);
+    bool fillListSelectedRecord (QList<QString> &param);
 
 private slots:
     void slotFillTask        (void);
 
-    void slotCreateEditDialog(const int &r);
+    void slotCreateEditDialog(const QString &action);
+    void slotCreateEditDialog(void);
 
     void slotActualRecords (const bool &actual);
     void slotFindTask(const QString &text);
-    void slotInsertOrUpdateRecords (void);
+    void slotInsertOrUpdateRecords (const QList<QString> &param);
     void slotCopyRecords           (void);
     void slotDeleteRecords         (void);
     void slotRefreshRecords        (void);

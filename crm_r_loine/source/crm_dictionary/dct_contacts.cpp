@@ -2,7 +2,7 @@
 
 #include "source/crm_dictionary/dct_contacts.h"
 
-Contacts::Contacts(QWidget *parent) :
+CContacts::CContacts(QWidget *parent) :
     QWidget(parent)
   , ui  (new Ui::Contacts)
   , dialogEdit(new ContactsDialog(this) )
@@ -12,7 +12,7 @@ Contacts::Contacts(QWidget *parent) :
     connect(ui->buttonNew, SIGNAL(clicked()), dialogEdit, SLOT(show()));
 }
 
-Contacts::~Contacts()
+CContacts::~CContacts()
 {
     if (dialogEdit) { delete dialogEdit; dialogEdit = nullptr; }
     if (ui)         { delete ui;         ui         = nullptr; }

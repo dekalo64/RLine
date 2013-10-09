@@ -1,5 +1,3 @@
-#include "ui_dlg_cppsst.h"
-
 #include "source/crm_dictionary/dct_priorities.h"
 #include "source/crm_additionally/adl_communicate.h"
 
@@ -7,32 +5,34 @@ QT_BEGIN_NAMESPACE
 class QCoreApplication;
 QT_END_NAMESPACE
 
-Priorities::Priorities(QWidget *parent /* = 0 */):
+CPriorities::CPriorities(QWidget *parent /* = 0 */):
     CCppsst(parent)
-  , actualRecords(true)
+  , actualRecords(false)
 {
-    modelPriorities      = new QStandardItemModel(this);
+// model
+    modelPriorities           = new QStandardItemModel(this);
     modelSelectionPriorities  = new QItemSelectionModel(modelPriorities);
 
-    treeViewCppsst->setRootIsDecorated(false);
-    treeViewCppsst->setAlternatingRowColors(true);
-    treeViewCppsst->setModel(modelPriorities);
-    treeViewCppsst->setSelectionModel(modelSelectionPriorities);
+    treeCppsst->setRootIsDecorated(false);
+    treeCppsst->setAlternatingRowColors(true);
+    treeCppsst->setModel(modelPriorities);
+    treeCppsst->setSelectionModel(modelSelectionPriorities);
+    treeCppsst->installEventFilter(this);
 
     modelPriorities->insertColumns(0, PRIORITIES_MODEL_COLUMN_COUNT);
     modelPriorities->setHeaderData(1, Qt::Horizontal, QObject::tr("Наименование"));
     modelPriorities->setHeaderData(3, Qt::Horizontal, QObject::tr("Уровень"));
-    QVector<int> vector;
-    columnHidden(treeViewCppsst, modelPriorities, vector << 0 << 2);
-                 vector.clear();
+
+    QVector<int> storage;
+                 storage.append(0);
+                 storage.append(2);
+    CDictionaryCore::columnHidden(treeCppsst, modelPriorities, storage);
+                 storage.clear();
 
     ui->labelCurrentUser->setText(QString("Пользователь: <b><u>" + currentUser() + "</u></b>"));
 
-    cppsstDialog->ui->comboBoxIcon->addItem(QIcon("data/picture/additionally/red.png"),    "Высокий");
-    cppsstDialog->ui->comboBoxIcon->addItem(QIcon("data/picture/additionally/yellow.png"), "Средний");
-    cppsstDialog->ui->comboBoxIcon->addItem(QIcon("data/picture/additionally/green.png"),  "Низкий");
-
-    connect(cppsstDialog, SIGNAL(saveDataChanged()), this, SLOT(slotInsertOrUpdateRecords()));
+    connect(cppsstDialog, SIGNAL(saveDataChanged(QList<QString>)), this, SLOT(slotInsertOrUpdateRecords(QList<QString>)));
+    connect(this, SIGNAL(enabledComboBox(bool)), cppsstDialog, SLOT(slotEnabledComboBox(bool)));
     connect(filter, SIGNAL(textChanged(QString)), SLOT(slotFindPriorities(QString)));
 
     slotFillPriorities();
@@ -42,41 +42,74 @@ Priorities::Priorities(QWidget *parent /* = 0 */):
            : ui->labelViewState->setText(QString(tr("Отображаются записи: <b><u>Все</u></b>")));
 }
 
-Priorities::~Priorities()
+CPriorities::~CPriorities()
 {
     if (IS_VALID_PTR(modelSelectionPriorities))  { delete modelSelectionPriorities;  modelSelectionPriorities  = nullptr; }
     if (IS_VALID_PTR(modelPriorities))           { delete modelPriorities;           modelPriorities           = nullptr; }
 }
 
-void Priorities::slotCreateEditDialog(const int &r)
+bool CPriorities::eventFilter(QObject *object, QEvent *event)
+{
+    if (object == qobject_cast<CTreeViewCppsst*>(treeCppsst)) {
+        if (event->type() == QEvent::FocusIn){
+
+            for (QAction *action : getContextMenu()->actions()){
+                disconnect(action, SIGNAL(triggered()), 0, 0);
+            }
+
+            connect(getContextMenu()->actions().at(0), SIGNAL(triggered()), SLOT(slotCreateEditDialog()));
+            connect(getContextMenu()->actions().at(2), SIGNAL(triggered()), SLOT(slotCopyRecords()));
+            connect(getContextMenu()->actions().at(3), SIGNAL(triggered()), SLOT(slotDeleteRecords()));
+            connect(getContextMenu()->actions().at(5), SIGNAL(triggered()), SLOT(slotRefreshRecords()));
+
+            return false;
+        }
+    }
+    return QWidget::eventFilter(object, event);
+}
+
+
+void CPriorities::slotCreateEditDialog(const QString &action)
 {
     if (currentDatabase().isOpen()) {
 
-        r == 0  ? rad = RecordActionDatabase::ardInsert
-                : rad = RecordActionDatabase::ardUpdate;
+        QString::compare(action, "add") == 0 ? act = Action::Add : act = Action::Edit;
 
         cppsstDialog->setWindowTitle(QString("Приоритет"));
 
-        if (treeViewCppsst == focusWidget()){
-            if (rad == 0){
-                if (fillFormSelectedRecord()){
+        emit enabledComboBox(true);
+
+        if (treeCppsst == focusWidget()){
+            if (act == Action::Add){
+
+                QList<QString> param;
+                if (fillListSelectedRecord(param)){
+                    cppsstDialog->fillFormSelectedRecord(param, act);
                     cppsstDialog->show();
                 }
-            }else if (rad == 1){
+            }else if (act == Action::Edit){
                 if (!modelSelectionPriorities->selection().isEmpty()){
-                    if (fillFormSelectedRecord()){
+
+                    QList<QString> param;
+                    if (fillListSelectedRecord(param)){
+                        cppsstDialog->fillFormSelectedRecord(param, act);
                         cppsstDialog->show();
                     }
                 } else
                     CCommunicate::showing(QString("Не удается выполнить, запись не выбрана"));
             }
         }else
-            CCommunicate::showing(QString("Не удается выполнить, таблица/запись не выбрана"));
+           CCommunicate::showing(QString("Не удается выполнить, таблица/запись не выбрана"));
     } else
         CCommunicate::showing(QString("Не удается выполнить, база данных не доступна"));
 }
 
-void Priorities::fillPrioritiesModel(QSqlQuery &stored)
+void CPriorities::slotCreateEditDialog()
+{
+    slotCreateEditDialog("edit");
+}
+
+void CPriorities::fillPrioritiesModel(QSqlQuery &stored)
 {
     modelPriorities->removeRows(0, modelPriorities->rowCount(QModelIndex()), QModelIndex());
     modelPriorities->insertRows(stored.numRowsAffected(), 0);
@@ -122,14 +155,14 @@ void Priorities::fillPrioritiesModel(QSqlQuery &stored)
 #endif
 }
 
-void Priorities::slotCopyRecords(void)
+void CPriorities::slotCopyRecords(void)
 {
     QList<QVariant> list;
     QSqlQuery       stored;
 
     if (currentDatabase().isOpen()) {
 
-        int code = modelSelectionPriorities->currentIndex().sibling(modelSelectionPriorities->currentIndex().row(), 0).data().toUInt();
+        const int code = modelSelectionPriorities->currentIndex().sibling(modelSelectionPriorities->currentIndex().row(), 0).data().toUInt();
 
         if (!modelSelectionPriorities->selection().isEmpty()){
             QMessageBox answer;
@@ -143,7 +176,7 @@ void Priorities::slotCopyRecords(void)
             answer.exec();
 
             if (answer.clickedButton() == copy){
-                list.append((int)code);
+                list.append(code);
                 stored.setForwardOnly(true);
                 stored = execStored(currentDatabase(), "CopyPriorityType", storageHashTable(list));
                 stored.finish();
@@ -151,7 +184,7 @@ void Priorities::slotCopyRecords(void)
                 slotRefreshRecords(); // refresh
 
             } else if (answer.clickedButton() == cancel){
-                treeViewCppsst->clearSelection();
+                treeCppsst->clearSelection();
                 answer.reject();
             }
         } else
@@ -160,14 +193,14 @@ void Priorities::slotCopyRecords(void)
         CCommunicate::showing(QString("Не удается выполнить, база данных не доступна"));
 }
 
-void Priorities::slotDeleteRecords(void)
+void CPriorities::slotDeleteRecords(void)
 {
     QList<QVariant> list;
     QSqlQuery       stored;
 
     if (currentDatabase().isOpen()) {
 
-        int code = modelSelectionPriorities->currentIndex().sibling(modelSelectionPriorities->currentIndex().row(), 0).data().toUInt();
+        const int code = modelSelectionPriorities->currentIndex().sibling(modelSelectionPriorities->currentIndex().row(), 0).data().toUInt();
 
         if (!modelSelectionPriorities->selection().isEmpty()) {
             QMessageBox answer;
@@ -181,7 +214,7 @@ void Priorities::slotDeleteRecords(void)
             answer.exec();
 
             if (answer.clickedButton() == _delete){
-                list.append((int)code);
+                list.append(code);
                 stored.setForwardOnly(true);
                 stored = execStored(currentDatabase(), "DeletePriorityType", storageHashTable(list));
                 stored.finish();
@@ -189,7 +222,7 @@ void Priorities::slotDeleteRecords(void)
                 slotRefreshRecords(); // refresh
 
             } else if (answer.clickedButton() == cancel){
-                treeViewCppsst->clearSelection();
+                treeCppsst->clearSelection();
                 answer.reject();
             }
         } else
@@ -198,34 +231,43 @@ void Priorities::slotDeleteRecords(void)
         CCommunicate::showing(QString("Не удается выполнить, база данных не доступна"));
 }
 
-void Priorities::slotRefreshRecords()
+void CPriorities::slotRefreshRecords()
 {
     slotFillPriorities();
 }
 
-bool Priorities::fillFormSelectedRecord(void)
+bool CPriorities::fillListSelectedRecord(QList<QString> &param)
 {
     QList<QVariant> list;
     QSqlQuery       stored;
 
-    if (rad == 0) {
-        cppsstDialog->ui->comboBoxIcon->setCurrentIndex(-1);
-        cppsstDialog->ui->labelUserD->setText(QString("Нет данных"));
-        cppsstDialog->ui->labelDateD->setText(QString("Нет данных"));
-    } else if (rad == 1) {
+    if (act == Action::Add) {
 
-        list.append(modelSelectionPriorities->currentIndex().sibling(modelSelectionPriorities->currentIndex().row(), 0).data().toUInt());
+        param.append(QString("%1").arg(-1));
+        param.append("Нет данных");
+        param.append("Нет данных");
+
+    } else if (act == Action::Edit) {
+
+        const int code = modelSelectionPriorities->currentIndex().sibling(modelSelectionPriorities->currentIndex().row(), 0).data().toUInt();
+
+        list.append(code);
         stored.setForwardOnly(true);
         stored = execStored(currentDatabase(), "ReadOnePriorityType", storageHashTable(list));
 
         if (stored.numRowsAffected() > 0) {
             while (stored.next()) {
-                cppsstDialog->setWindowTitle(QString(cppsstDialog->windowTitle() + " - [ %1 ]").arg(stored.value(stored.record().indexOf("pt_name")).toString()));
-                cppsstDialog->ui->lineEditName->setText(stored.value(stored.record().indexOf("pt_name")).toString());
-                cppsstDialog->ui->comboBoxIcon->setCurrentIndex(stored.value(stored.record().indexOf("pt_level")).toUInt());
-                cppsstDialog->ui->checkBoxActual->setChecked(stored.value(stored.record().indexOf("pt_actual")).toBool());
-                cppsstDialog->ui->labelUserD->setText(stored.value(stored.record().indexOf("pt_muser")).toString());
-                cppsstDialog->ui->labelDateD->setText(stored.value(stored.record().indexOf("pt_mdate")).toDateTime().toString("yyyy-MM-dd hh:mm:ss"));
+                const QString name = stored.value(stored.record().indexOf("pt_name")).toString();
+                const int    level = stored.value(stored.record().indexOf("pt_level")).toUInt();
+                const bool  actual = stored.value(stored.record().indexOf("pt_actual")).toBool();
+                const QString user = stored.value(stored.record().indexOf("pt_muser")).toString();
+                const QString date = stored.value(stored.record().indexOf("pt_mdate")).toDateTime().toString("yyyy-MM-dd hh:mm:ss");
+
+                param.append(name);
+                param.append(QVariant(level).toString());
+                param.append(QVariant(actual).toString());
+                param.append(user);
+                param.append(date);
             }
         } else {
             CCommunicate::showing(QString("Не удается выполнить, документ либо его элемент был удален другим пользователем"));
@@ -236,33 +278,32 @@ bool Priorities::fillFormSelectedRecord(void)
     return true;
 }
 
-void Priorities::slotInsertOrUpdateRecords(void)
+void CPriorities::slotInsertOrUpdateRecords(const QList<QString> &param)
 {
     QList<QVariant> list;
     QSqlQuery       stored;
 
-    if (rad == 0) {
-        list.append(cppsstDialog->ui->lineEditName->text());
-        list.append((int)cppsstDialog->ui->checkBoxActual->isChecked());
-        list.append((int)cppsstDialog->ui->comboBoxIcon->currentIndex());
-        stored = execStored(currentDatabase(), "InsertPriorityType", storageHashTable(list));
-        stored.finish();
-    }
-    else if (rad == 1) {
-        int code = modelSelectionPriorities->currentIndex().sibling(modelSelectionPriorities->currentIndex().row(), 0).data().toUInt();
+    const int code = modelSelectionPriorities->currentIndex().sibling(modelSelectionPriorities->currentIndex().row(), 0).data().toUInt();
 
-        list.append(code);
-        list.append(cppsstDialog->ui->lineEditName->text());
-        list.append((int)cppsstDialog->ui->checkBoxActual->isChecked());
-        list.append((int)cppsstDialog->ui->comboBoxIcon->currentIndex());
-        stored = execStored(currentDatabase(), "UpdatePriorityType", storageHashTable(list));
-        stored.finish();
+    list.append(code);
+    list.append(param.at(0));
+    list.append(param.at(2));
+    list.append(param.at(1));
+
+    if (act == Action::Add) {
+        list.removeAt(0);
+        stored = execStored(currentDatabase(), "InsertPriorityType", storageHashTable(list));
     }
+    else if (act == Action::Edit) {
+        stored = execStored(currentDatabase(), "UpdatePriorityType", storageHashTable(list));
+    }
+    stored.finish();
+
     slotRefreshRecords();
-    clearEditDialog(cppsstDialog);
+    CDictionaryCore::clearEditDialog(cppsstDialog);
 }
 
-void Priorities::slotFillPriorities()
+void CPriorities::slotFillPriorities()
 {
     QList<QVariant> list;
     QSqlQuery       stored;
@@ -287,7 +328,7 @@ void Priorities::slotFillPriorities()
     stored.finish();
 }
 
-void Priorities::slotActualRecords(const bool &actual)
+void CPriorities::slotActualRecords(const bool &actual)
 {
     actualRecords = !actual;
     slotRefreshRecords();
@@ -296,7 +337,7 @@ void Priorities::slotActualRecords(const bool &actual)
            : ui->labelViewState->setText(QString(tr("Отображаются записи: <b><u>Все</u></b>")));
 }
 
-void Priorities::slotFindPriorities(const QString &text)
+void CPriorities::slotFindPriorities(const QString &text)
 {
     QList<QVariant> list;
     QSqlQuery       stored;

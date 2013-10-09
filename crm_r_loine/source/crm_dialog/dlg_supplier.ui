@@ -1,0 +1,1005 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>CSupplierDialog</class>
+ <widget class="QDialog" name="CSupplierDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>381</width>
+    <height>528</height>
+   </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>381</width>
+    <height>528</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>381</width>
+    <height>528</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>Поставщик</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="1" column="0" alignment="Qt::AlignRight">
+    <widget class="QCheckBox" name="checkActual">
+     <property name="font">
+      <font>
+       <family>Arial</family>
+       <pointsize>9</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Актуальна</string>
+     </property>
+     <property name="tristate">
+      <bool>false</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <widget class="Line" name="line">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0">
+    <layout class="QHBoxLayout" name="hLayoutOkCancel">
+     <item>
+      <widget class="QPushButton" name="buttonCancel">
+       <property name="font">
+        <font>
+         <family>Arial</family>
+         <pointsize>9</pointsize>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>Отмена</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonSave">
+       <property name="font">
+        <font>
+         <family>Arial</family>
+         <pointsize>9</pointsize>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>Сохранить</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="4" column="0">
+    <layout class="QGridLayout" name="gLayoutInformation">
+     <property name="verticalSpacing">
+      <number>0</number>
+     </property>
+     <item row="1" column="0" alignment="Qt::AlignLeft">
+      <widget class="QLabel" name="labelUserD">
+       <property name="font">
+        <font>
+         <family>Arial</family>
+         <pointsize>9</pointsize>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>User</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0" alignment="Qt::AlignLeft">
+      <widget class="QLabel" name="labelUserI">
+       <property name="font">
+        <font>
+         <family>Arial</family>
+        </font>
+       </property>
+       <property name="text">
+        <string>Пользователь</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1" alignment="Qt::AlignRight">
+      <widget class="QLabel" name="labelDateI">
+       <property name="font">
+        <font>
+         <family>Arial</family>
+        </font>
+       </property>
+       <property name="text">
+        <string>Дата</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1" alignment="Qt::AlignRight">
+      <widget class="QLabel" name="labelDateD">
+       <property name="font">
+        <font>
+         <family>Arial</family>
+         <pointsize>9</pointsize>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>Date</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="0" column="0">
+    <widget class="QTabWidget" name="tabWidget">
+     <property name="font">
+      <font>
+       <family>Arial</family>
+       <pointsize>9</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="tabShape">
+      <enum>QTabWidget::Triangular</enum>
+     </property>
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <property name="usesScrollButtons">
+      <bool>true</bool>
+     </property>
+     <widget class="QWidget" name="tabDescription">
+      <attribute name="title">
+       <string>Описание</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_7">
+       <item row="0" column="0">
+        <widget class="QGroupBox" name="groupGeneral">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="title">
+          <string>Основное</string>
+         </property>
+         <property name="flat">
+          <bool>true</bool>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_8" rowstretch="0,0,0,0,0,0,0,0,0,0,0,0,0,0,0">
+          <property name="topMargin">
+           <number>6</number>
+          </property>
+          <property name="horizontalSpacing">
+           <number>6</number>
+          </property>
+          <property name="verticalSpacing">
+           <number>5</number>
+          </property>
+          <item row="0" column="0" alignment="Qt::AlignRight">
+           <widget class="QLabel" name="labelName">
+            <property name="font">
+             <font>
+              <family>Arial</family>
+              <pointsize>9</pointsize>
+              <weight>75</weight>
+              <bold>true</bold>
+             </font>
+            </property>
+            <property name="text">
+             <string>Название:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="2" alignment="Qt::AlignRight">
+           <widget class="QLabel" name="labelFax">
+            <property name="text">
+             <string>Факс:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="5" alignment="Qt::AlignRight">
+           <widget class="QToolButton" name="buttonCity">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="popupMode">
+             <enum>QToolButton::MenuButtonPopup</enum>
+            </property>
+            <property name="toolButtonStyle">
+             <enum>Qt::ToolButtonTextBesideIcon</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="10" column="1">
+           <widget class="QLineEdit" name="editPostIndex">
+            <property name="font">
+             <font>
+              <weight>50</weight>
+              <bold>false</bold>
+             </font>
+            </property>
+            <property name="acceptDrops">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="11" column="0" alignment="Qt::AlignRight">
+           <widget class="QLabel" name="labelEmail">
+            <property name="text">
+             <string>E-mail:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0" alignment="Qt::AlignRight">
+           <widget class="QLabel" name="labelNameEng">
+            <property name="font">
+             <font>
+              <family>Arial</family>
+              <pointsize>9</pointsize>
+              <weight>75</weight>
+              <bold>true</bold>
+             </font>
+            </property>
+            <property name="text">
+             <string>Name:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="12" column="1" colspan="5">
+           <widget class="QLineEdit" name="editWeb">
+            <property name="font">
+             <font>
+              <weight>50</weight>
+              <bold>false</bold>
+             </font>
+            </property>
+            <property name="acceptDrops">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1" colspan="5">
+           <widget class="QLineEdit" name="editName">
+            <property name="font">
+             <font>
+              <weight>50</weight>
+              <bold>false</bold>
+             </font>
+            </property>
+            <property name="acceptDrops">
+             <bool>false</bool>
+            </property>
+            <property name="readOnly">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="3" colspan="3">
+           <widget class="QLineEdit" name="editFax">
+            <property name="font">
+             <font>
+              <weight>50</weight>
+              <bold>false</bold>
+             </font>
+            </property>
+            <property name="acceptDrops">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1" colspan="4">
+           <widget class="QLineEdit" name="editCity">
+            <property name="font">
+             <font>
+              <weight>50</weight>
+              <bold>false</bold>
+             </font>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="13" column="0" alignment="Qt::AlignRight">
+           <widget class="QLabel" name="labelDirector">
+            <property name="text">
+             <string>Директор:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="10" column="2" alignment="Qt::AlignRight">
+           <widget class="QLabel" name="labelDate">
+            <property name="text">
+             <string>Дата:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="1" colspan="5">
+           <widget class="QLineEdit" name="editMobilePhone">
+            <property name="font">
+             <font>
+              <weight>50</weight>
+              <bold>false</bold>
+             </font>
+            </property>
+            <property name="acceptDrops">
+             <bool>false</bool>
+            </property>
+            <property name="readOnly">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="11" column="1" colspan="5">
+           <widget class="QLineEdit" name="editEmail">
+            <property name="font">
+             <font>
+              <weight>50</weight>
+              <bold>false</bold>
+             </font>
+            </property>
+            <property name="acceptDrops">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="10" column="3" colspan="3">
+           <widget class="QLineEdit" name="editDateOrg">
+            <property name="font">
+             <font>
+              <weight>50</weight>
+              <bold>false</bold>
+             </font>
+            </property>
+            <property name="acceptDrops">
+             <bool>false</bool>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="1" colspan="5">
+           <widget class="QLineEdit" name="editAttender">
+            <property name="font">
+             <font>
+              <weight>50</weight>
+              <bold>false</bold>
+             </font>
+            </property>
+            <property name="acceptDrops">
+             <bool>false</bool>
+            </property>
+            <property name="readOnly">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="1" colspan="5">
+           <widget class="QLineEdit" name="editAddress">
+            <property name="font">
+             <font>
+              <weight>50</weight>
+              <bold>false</bold>
+             </font>
+            </property>
+            <property name="acceptDrops">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1" colspan="5">
+           <widget class="QLineEdit" name="editClientNumber">
+            <property name="font">
+             <font>
+              <weight>50</weight>
+              <bold>false</bold>
+             </font>
+            </property>
+            <property name="acceptDrops">
+             <bool>false</bool>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1" colspan="5">
+           <widget class="QLineEdit" name="editNameEng">
+            <property name="font">
+             <font>
+              <weight>50</weight>
+              <bold>false</bold>
+             </font>
+            </property>
+            <property name="acceptDrops">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="12" column="0" alignment="Qt::AlignRight">
+           <widget class="QLabel" name="labelWeb">
+            <property name="text">
+             <string>Web:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="0" alignment="Qt::AlignRight">
+           <widget class="QLabel" name="labelMobilePhone">
+            <property name="text">
+             <string>Телефон (М):</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0" alignment="Qt::AlignRight">
+           <widget class="QLabel" name="labelCity">
+            <property name="text">
+             <string>Город:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="0" alignment="Qt::AlignRight">
+           <widget class="QLabel" name="labelPhone">
+            <property name="text">
+             <string>Телефон:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="1">
+           <widget class="QLineEdit" name="editWorkPhone">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="font">
+             <font>
+              <weight>50</weight>
+              <bold>false</bold>
+             </font>
+            </property>
+            <property name="acceptDrops">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0" alignment="Qt::AlignRight">
+           <widget class="QLabel" name="labelAddress">
+            <property name="text">
+             <string>Адрес:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0" alignment="Qt::AlignRight">
+           <widget class="QLabel" name="labelContact">
+            <property name="text">
+             <string>Контакт:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="14" column="0" alignment="Qt::AlignRight">
+           <widget class="QLabel" name="labelCurrency">
+            <property name="text">
+             <string>Валюта:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0" alignment="Qt::AlignRight">
+           <widget class="QLabel" name="labelClientNumber">
+            <property name="font">
+             <font>
+              <family>Arial</family>
+              <pointsize>9</pointsize>
+              <weight>75</weight>
+              <bold>true</bold>
+             </font>
+            </property>
+            <property name="text">
+             <string>№ клиента:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="10" column="0" alignment="Qt::AlignRight">
+           <widget class="QLabel" name="labelIndex">
+            <property name="text">
+             <string>Почт. Индекс:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="13" column="1" colspan="5">
+           <widget class="QLineEdit" name="editDirector">
+            <property name="font">
+             <font>
+              <weight>50</weight>
+              <bold>false</bold>
+             </font>
+            </property>
+            <property name="acceptDrops">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="14" column="1" colspan="5">
+           <widget class="QComboBox" name="comboCurrency">
+            <property name="font">
+             <font>
+              <weight>50</weight>
+              <bold>false</bold>
+             </font>
+            </property>
+            <property name="editable">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabRequisite">
+      <attribute name="title">
+       <string>Реквизиты</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_9">
+       <item row="0" column="0">
+        <widget class="QGroupBox" name="groupRequisite">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="title">
+          <string>Основное</string>
+         </property>
+         <property name="flat">
+          <bool>true</bool>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_10">
+          <property name="topMargin">
+           <number>6</number>
+          </property>
+          <property name="verticalSpacing">
+           <number>5</number>
+          </property>
+          <item row="0" column="0" colspan="2" alignment="Qt::AlignRight">
+           <widget class="QLabel" name="label">
+            <property name="text">
+             <string>Уч. платежа:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="11" column="2">
+           <widget class="QDoubleSpinBox" name="spinServices">
+            <property name="font">
+             <font>
+              <weight>50</weight>
+              <bold>false</bold>
+             </font>
+            </property>
+            <property name="maximum">
+             <double>100.000000000000000</double>
+            </property>
+            <property name="value">
+             <double>100.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="12" column="2">
+           <widget class="QSpinBox" name="spinDeliveryTime">
+            <property name="font">
+             <font>
+              <weight>50</weight>
+              <bold>false</bold>
+             </font>
+            </property>
+           </widget>
+          </item>
+          <item row="11" column="4" colspan="2">
+           <widget class="QDoubleSpinBox" name="spinGoods">
+            <property name="font">
+             <font>
+              <weight>50</weight>
+              <bold>false</bold>
+             </font>
+            </property>
+            <property name="maximum">
+             <double>100.000000000000000</double>
+            </property>
+            <property name="value">
+             <double>100.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2" colspan="4">
+           <widget class="QComboBox" name="comboLanguage">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="font">
+             <font>
+              <weight>50</weight>
+              <bold>false</bold>
+             </font>
+            </property>
+            <property name="editable">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="4" colspan="2">
+           <widget class="QLineEdit" name="editBalance">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="font">
+             <font>
+              <weight>50</weight>
+              <bold>false</bold>
+             </font>
+            </property>
+            <property name="text">
+             <string>нет</string>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="2" colspan="4">
+           <widget class="QLineEdit" name="editIBAN">
+            <property name="font">
+             <font>
+              <weight>50</weight>
+              <bold>false</bold>
+             </font>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0" colspan="2" alignment="Qt::AlignRight">
+           <widget class="QLabel" name="labelDateIssuance">
+            <property name="text">
+             <string>Дата выдачи:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="3" alignment="Qt::AlignRight">
+           <widget class="QLabel" name="labelMFO">
+            <property name="text">
+             <string>МФО:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="12" column="3" alignment="Qt::AlignRight">
+           <widget class="QLabel" name="labelPrepayment">
+            <property name="text">
+             <string>Предоплата, %:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="0" colspan="2" alignment="Qt::AlignRight">
+           <widget class="QLabel" name="labelInBank">
+            <property name="text">
+             <string>В банке:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0" colspan="2" alignment="Qt::AlignRight">
+           <widget class="QLabel" name="labelLanguage">
+            <property name="text">
+             <string>Язык:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="2" colspan="4">
+           <widget class="QLineEdit" name="editInBank">
+            <property name="font">
+             <font>
+              <weight>50</weight>
+              <bold>false</bold>
+             </font>
+            </property>
+           </widget>
+          </item>
+          <item row="11" column="3" alignment="Qt::AlignRight">
+           <widget class="QLabel" name="labelGoods">
+            <property name="text">
+             <string>Товары, %:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="10" column="0" colspan="2" alignment="Qt::AlignRight">
+           <widget class="QLabel" name="labelComment">
+            <property name="text">
+             <string>Коментарий:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0" colspan="2" alignment="Qt::AlignRight">
+           <widget class="QLabel" name="labelAccount">
+            <property name="text">
+             <string>Р/С №:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="10" column="2" colspan="4">
+           <widget class="QTextEdit" name="editComment">
+            <property name="font">
+             <font>
+              <weight>50</weight>
+              <bold>false</bold>
+             </font>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0" colspan="2" alignment="Qt::AlignRight">
+           <widget class="QLabel" name="labelINN">
+            <property name="text">
+             <string>ИНН:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="2">
+           <widget class="QLineEdit" name="editNDS">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="font">
+             <font>
+              <weight>50</weight>
+              <bold>false</bold>
+             </font>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="2" colspan="4">
+           <widget class="QLineEdit" name="editAccount">
+            <property name="font">
+             <font>
+              <weight>50</weight>
+              <bold>false</bold>
+             </font>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="0" colspan="2" alignment="Qt::AlignRight">
+           <widget class="QLabel" name="labelIBAN">
+            <property name="text">
+             <string>IBAN:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0" colspan="2" alignment="Qt::AlignRight">
+           <widget class="QLabel" name="labelNDS">
+            <property name="text">
+             <string>Свид. НДС:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="2" colspan="4">
+           <widget class="QLineEdit" name="editINN">
+            <property name="font">
+             <font>
+              <weight>50</weight>
+              <bold>false</bold>
+             </font>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="2" colspan="4">
+           <widget class="QDateEdit" name="dateIssuance">
+            <property name="font">
+             <font>
+              <weight>50</weight>
+              <bold>false</bold>
+             </font>
+            </property>
+            <property name="date">
+             <date>
+              <year>2013</year>
+              <month>1</month>
+              <day>1</day>
+             </date>
+            </property>
+            <property name="calendarPopup">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2" colspan="4">
+           <widget class="QLineEdit" name="editPayment">
+            <property name="font">
+             <font>
+              <weight>50</weight>
+              <bold>false</bold>
+             </font>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="11" column="0" colspan="2" alignment="Qt::AlignRight">
+           <widget class="QLabel" name="labelServices">
+            <property name="text">
+             <string>Услуги, %:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="2">
+           <widget class="QLineEdit" name="editZKPO">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="font">
+             <font>
+              <weight>50</weight>
+              <bold>false</bold>
+             </font>
+            </property>
+           </widget>
+          </item>
+          <item row="12" column="0" colspan="2" alignment="Qt::AlignRight">
+           <widget class="QLabel" name="labelDeliveryTime">
+            <property name="text">
+             <string>Срок Пост., дн:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="12" column="4" colspan="2">
+           <widget class="QDoubleSpinBox" name="spinPrepayment">
+            <property name="font">
+             <font>
+              <weight>50</weight>
+              <bold>false</bold>
+             </font>
+            </property>
+            <property name="maximum">
+             <double>100.000000000000000</double>
+            </property>
+            <property name="value">
+             <double>100.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="4" colspan="2">
+           <widget class="QLineEdit" name="editMFO">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="font">
+             <font>
+              <weight>50</weight>
+              <bold>false</bold>
+             </font>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0" colspan="2" alignment="Qt::AlignRight">
+           <widget class="QLabel" name="labelZKPO">
+            <property name="text">
+             <string>Код ЗКПО:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="3" alignment="Qt::AlignRight">
+           <widget class="QLabel" name="labelBalance">
+            <property name="text">
+             <string>Баланс:</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabProducer">
+      <attribute name="title">
+       <string>Производители</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_5">
+       <item row="0" column="0">
+        <widget class="QGroupBox" name="groupProducer">
+         <property name="title">
+          <string>Производители</string>
+         </property>
+         <property name="flat">
+          <bool>true</bool>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_12">
+          <property name="topMargin">
+           <number>5</number>
+          </property>
+          <property name="verticalSpacing">
+           <number>5</number>
+          </property>
+          <item row="2" column="0" alignment="Qt::AlignRight">
+           <widget class="QLabel" name="labelWhatPerform">
+            <property name="text">
+             <string>Что выполнить?</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QToolButton" name="buttonProducer">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="popupMode">
+             <enum>QToolButton::MenuButtonPopup</enum>
+            </property>
+            <property name="toolButtonStyle">
+             <enum>Qt::ToolButtonTextBesideIcon</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0" colspan="2">
+           <widget class="QTreeView" name="treeProducer"/>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

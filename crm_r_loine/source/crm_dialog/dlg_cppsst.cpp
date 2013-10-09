@@ -5,21 +5,19 @@
 
 CCppsstDialog::CCppsstDialog(QWidget *parent) :
       QDialog(parent)
-    , enableSave(false)
     , ui(new Ui::CCppsstDialog)
 {
+    ui->setupUi(this);
+
     setWindowFlags(Qt::Drawer);
     setModal(true);
 
-    ui->setupUi(this);
+    ui->comboBoxIcon->addItem(QIcon("data/picture/additionally/red.png"),    "Высокий");
+    ui->comboBoxIcon->addItem(QIcon("data/picture/additionally/yellow.png"), "Средний");
+    ui->comboBoxIcon->addItem(QIcon("data/picture/additionally/green.png"),  "Низкий");
 
     connect(ui->buttonCancel, SIGNAL(clicked()), this, SLOT(close()));
-    connect(ui->lineEditName,  SIGNAL(textEdited(QString)), this, SLOT(slotCurrentChanged()));
-    connect(ui->comboBoxIcon,   SIGNAL(activated(int)), this, SLOT(slotCurrentChanged()));
-    connect(ui->checkBoxActual, SIGNAL(clicked()), this, SLOT(slotCurrentChanged()));
     connect(ui->buttonSave,   SIGNAL(clicked()), this, SLOT(slotSaveDataChanged()));
-
-    updateActions();
 }
 
 CCppsstDialog::~CCppsstDialog()
@@ -27,24 +25,46 @@ CCppsstDialog::~CCppsstDialog()
     delete ui;
 }
 
-void CCppsstDialog::closeEvent(QCloseEvent *)
+void CCppsstDialog::fillFormSelectedRecord(const QList<QString> &param, const Action &act)
 {
-    CDictionaryCore::clearEditDialog(this);
-    enableSave = false;
+    if (act == Action::Add){
+
+        ui->comboBoxIcon->setCurrentIndex(QVariant(param.at(0)).toInt());
+        ui->labelUserD->setText(param.at(1));
+        ui->labelDateD->setText(param.at(2));
+
+    } else if (act == Action::Edit){
+
+        setWindowTitle(windowTitle() + QString(" - [%1]").arg(param.at(0)));
+
+        ui->lineEditName->setText         (param.at(0));
+        ui->comboBoxIcon->setCurrentIndex (QVariant(param.at(1)).toInt());
+        ui->checkBoxActual->setChecked    (QVariant(param.at(2)).toBool());
+        ui->labelUserD->setText           (param.at(3));
+        ui->labelDateD->setText           (param.at(4));
+
+    }
 }
 
-void CCppsstDialog::showEvent(QShowEvent *)
+void CCppsstDialog::closeEvent(QCloseEvent *)
 {
-    updateActions();
+    windowTitle().clear();
+    CDictionaryCore::clearEditDialog(this);
 }
 
 void CCppsstDialog::slotSaveDataChanged()
 {
-    emit saveDataChanged();
+    QList<QString> param;
+
+    param.append(ui->lineEditName->text());
+    param.append(QVariant(ui->comboBoxIcon->currentIndex()).toString());
+    param.append(QVariant(ui->checkBoxActual->isChecked()).toString());
+
+    emit saveDataChanged(param);
 }
 
-void CCppsstDialog::updateActions()
+void CCppsstDialog::slotEnabledComboBox(const bool &enabled)
 {
-    ui->buttonSave->setEnabled(enableSave);
-    enableSave = ((!ui->lineEditName->text().isEmpty()));
+    ui->comboBoxIcon->setEnabled (enabled);
+    ui->comboBoxIcon->setEditable(enabled);
 }

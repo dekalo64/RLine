@@ -1,7 +1,9 @@
 #include "source/crm_core/core_logisticmainwindow.h"
 #include "source/crm_core/core_logisticnamespace.h"
 
-LogisticMainWindow::LogisticMainWindow(QWidget *parent, Qt::WindowFlags flags):
+CLogisticMainWindow *CLogisticMainWindow::self = nullptr;
+
+CLogisticMainWindow::CLogisticMainWindow(QWidget *parent, Qt::WindowFlags flags):
     QMainWindow(parent, flags)
 {
     setUpdatesEnabled(true);
@@ -9,63 +11,61 @@ LogisticMainWindow::LogisticMainWindow(QWidget *parent, Qt::WindowFlags flags):
     setAttribute(Qt::WA_DeleteOnClose, true);
 
     QRect rect = geometry();
-    rect.moveCenter(QApplication::desktop()->availableGeometry().center());
+          rect.moveCenter(QApplication::desktop()->availableGeometry().center());
     setGeometry(rect);
 
     showMaximized();
 
-    m_mdiArea = new QMdiArea();
-    m_mdiArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-    m_mdiArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-    m_mdiArea->setViewMode(QMdiArea::SubWindowView);
-    m_mdiArea->setTabsClosable(true);
+    mdiArea = new QMdiArea();
+    mdiArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    mdiArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    mdiArea->setViewMode(QMdiArea::SubWindowView);
+    mdiArea->setTabsClosable(true);
 
-    m_windowMapper = new QSignalMapper(this);
+    windowMapper = new QSignalMapper(this);
 
     statusBar()->setVisible(false);
     statusBar()->setSizeGripEnabled(true);
 
     QWidget *centralWidget = new QWidget(this);
     QVBoxLayout *layout = new QVBoxLayout;
-    layout->setSpacing(0);
-    layout->setMargin(0);
-    layout->addWidget(m_mdiArea);
+                 layout->setSpacing(0);
+                 layout->setMargin(0);
+                 layout->addWidget(mdiArea);
 
     centralWidget->setLayout(layout);
     setCentralWidget(centralWidget);
 
     updateWindowTitle();
-    connectionWindowShow();
+    connectionWindowShow(this);
 
-    connect(m_mdiArea, SIGNAL(subWindowActivated(QMdiSubWindow*)),
-            this, SLOT(updateMenus()));
-    connect(m_windowMapper, SIGNAL(mapped(QWidget*)),
-            this, SLOT(slotSetActiveSubWindow(QWidget*)));
+    connect(mdiArea, SIGNAL(subWindowActivated(QMdiSubWindow*)), SLOT(updateMenus()));
+    connect(windowMapper, SIGNAL(mapped(QWidget*)),SLOT(slotSetActiveSubWindow(QWidget*)));
 }
 
-LogisticMainWindow::~LogisticMainWindow()
+CLogisticMainWindow::~CLogisticMainWindow()
 {
-    if (!IS_VALID_PTR(m_actionBar))          { delete m_actionBar;          m_actionBar          = nullptr; }
-    if (!IS_VALID_PTR(m_windowMapper))       { delete m_windowMapper;       m_windowMapper       = nullptr; }
-    if (!IS_VALID_PTR(m_mdiArea))            { delete m_mdiArea;            m_mdiArea            = nullptr; }
+    if (IS_VALID_PTR(actionBar))     { delete actionBar;    actionBar    = nullptr; }
+    if (IS_VALID_PTR(windowMapper))  { delete windowMapper; windowMapper = nullptr; }
+    if (IS_VALID_PTR(mdiArea))       { delete mdiArea;      mdiArea      = nullptr; }
+    if (IS_VALID_PTR(self))          { delete self;         self         = nullptr; }
 }
 
-QSize LogisticMainWindow::sizeHint() const
+QSize CLogisticMainWindow::sizeHint() const
 {
     QRect desktopRect = QApplication::desktop()->screenGeometry();
     QSize size = desktopRect.size() * qreal(0.9);
     return size;
 }
 
-void LogisticMainWindow::setupMenu(bool visible)
+void CLogisticMainWindow::setupMenu(const bool &visible)
 {
     if (!visible) return;
 
-    // Document
+// Document
     QMenu *documentMenu = menuBar()->addMenu(tr("&Документ"));
     documentMenu->addAction(tr("Новый"), this, SLOT(slotNewDocument()), QKeySequence(Qt::Key_F3));
     documentMenu->addAction(tr("Открыть"), this, SLOT(slotOpenDocument()), QKeySequence(Qt::Key_F4));
-    documentMenu->addAction(tr("Сохранить"), this, SLOT(slotSaveDocument()), QKeySequence(Qt::Key_F2));
     documentMenu->addSeparator();
     documentMenu->addAction(tr("Печать"), this, SLOT(slotPrintDocument()));
     documentMenu->addSeparator();
@@ -83,13 +83,13 @@ void LogisticMainWindow::setupMenu(bool visible)
     documentMenu->addSeparator();
     documentMenu->addAction(tr("Выход"), this, SLOT(close()), QKeySequence(Qt::ALT | Qt::Key_F4));
 
-    // Folder
+// Folder
     QMenu *folderMenu = menuBar()->addMenu(tr("&Папка"));
     folderMenu->addAction(tr("Взаимоотношения"), this, SLOT(slotRelationsFolder()));
     folderMenu->addAction(tr("Календать"), this, SLOT(slotCalendarFolder()));
     folderMenu->addAction(tr("Напоминания"), this, SLOT(slotReminderFolder()));
 
-    // Dictionary
+// Dictionary
     QMenu *dictionaryMenu = menuBar()->addMenu(tr("Справочники"));
     dictionaryMenu->addAction(tr("Заказчики"), this, SLOT(slotCustomerDictionary()));
     dictionaryMenu->addAction(tr("Поставщики"), this, SLOT(slotSuppliersDictionary()));
@@ -103,9 +103,9 @@ void LogisticMainWindow::setupMenu(bool visible)
     dictionaryMenu->addAction(tr("Статусы"), this, SLOT(slotStatusDictionary()));
     dictionaryMenu->addAction(tr("Приоритеты"), this, SLOT(slotPrioritiesDictionary()));
     dictionaryMenu->addSeparator();
-    dictionaryMenu->addAction(tr("Страны и города"), this, SLOT(slotCountryAndCityDictionary()));
+    dictionaryMenu->addAction(tr("Страны и города"), this, SLOT(slotCountryCityDictionary()));
 
-    // View
+// View
     QMenu *viewMenu = menuBar()->addMenu(tr("&Вид"));
 
     QAction *m_actual = viewMenu->addAction(tr("Актуальные документы"));
@@ -113,101 +113,89 @@ void LogisticMainWindow::setupMenu(bool visible)
 
     viewMenu->addAction(tr("Дерево документов"), this, SLOT(slotTreeDocumentsView()), QKeySequence(Qt::Key_F9));
 
-    // Window
+// Window
     QMenu *windowMenu = menuBar()->addMenu(tr("&Окно"));
 
     QAction *close = windowMenu->addAction(tr("Закрыть"));
-    connect(close, SIGNAL(triggered()), m_mdiArea, SLOT(closeActiveSubWindow()));
+    connect(close, SIGNAL(triggered()), mdiArea, SLOT(closeActiveSubWindow()));
 
     QAction *closeAll = windowMenu->addAction(tr("Закрыть все"));
-    connect(closeAll, SIGNAL(triggered()), m_mdiArea, SLOT(closeAllSubWindows()));
+    connect(closeAll, SIGNAL(triggered()), mdiArea, SLOT(closeAllSubWindows()));
 
     windowMenu->addSeparator();
 
     QAction *m_tile = windowMenu->addAction(tr("Плитка"));
-    connect(m_tile, SIGNAL(triggered()), m_mdiArea, SLOT(tileSubWindows()));
+    connect(m_tile, SIGNAL(triggered()), mdiArea, SLOT(tileSubWindows()));
 
     QAction *m_cascade = windowMenu->addAction(tr("Каскад"));
-    connect(m_cascade, SIGNAL(triggered()), m_mdiArea, SLOT(cascadeSubWindows()));
+    connect(m_cascade, SIGNAL(triggered()), mdiArea, SLOT(cascadeSubWindows()));
 
     windowMenu->addSeparator();
 
     QMenu *modeMenu = windowMenu->addMenu(tr("Режим отображения"));
     QAction *m_modeMdi = modeMenu->addAction(tr("Оконный"));
-    connect(m_modeMdi, SIGNAL(triggered()), m_mdiArea, SLOT(tileSubWindows()));
+    connect(m_modeMdi, SIGNAL(triggered()), mdiArea, SLOT(tileSubWindows()));
     QAction *m_modeWindow = modeMenu->addAction(tr("Вкладки"));
-    connect(m_modeWindow, SIGNAL(triggered()), m_mdiArea, SLOT(tileSubWindows()));
-
+    connect(m_modeWindow, SIGNAL(triggered()), mdiArea, SLOT(tileSubWindows()));
 
     windowMenu->addSeparator();
 
     QAction *next = windowMenu->addAction(tr("Следующее"));
-    connect(next, SIGNAL(triggered()), m_mdiArea, SLOT(activateNextSubWindow()));
+    connect(next, SIGNAL(triggered()), mdiArea, SLOT(activateNextSubWindow()));
 
     QAction *previous = windowMenu->addAction(tr("Предыдущее"));
-    connect(previous, SIGNAL(triggered()), m_mdiArea, SLOT(activatePreviousSubWindow()));
+    connect(previous, SIGNAL(triggered()), mdiArea, SLOT(activatePreviousSubWindow()));
 }
 
-void LogisticMainWindow::setupToolBar(bool visible)
+void CLogisticMainWindow::setupToolBar(const bool &visible)
 {
     if (!visible) return;
 
     setUnifiedTitleAndToolBarOnMac(true);
 
-    m_actionBar = new QToolBar(tr("Действия"), this);
-    m_actionBar->setAllowedAreas(Qt::TopToolBarArea | Qt::RightToolBarArea | Qt::BottomToolBarArea);
-    LogisticMainWindow::addToolBar(m_actionBar);
+    actionBar = new QToolBar(tr("Действия"), this);
+    actionBar->setAllowedAreas(Qt::TopToolBarArea | Qt::RightToolBarArea | Qt::BottomToolBarArea);
+    CLogisticMainWindow::addToolBar(actionBar);
 
-    QAction *m_nd = m_actionBar->addAction(QIcon(QString("data/picture/toolbar/new.png")), tr("Новый документ"));
+    QAction *m_nd = actionBar->addAction(QIcon(QString("data/picture/toolbar/new.png")), tr("Новый документ"));
     connect(m_nd, SIGNAL(triggered()), this, SLOT(slotNewDocument()));
 
-    QAction *m_ne = m_actionBar->addAction(QIcon(QString("data/picture/toolbar/edit.png")), tr("Открыть документ"));
+    QAction *m_ne = actionBar->addAction(QIcon(QString("data/picture/toolbar/edit.png")), tr("Открыть документ"));
     connect(m_ne, SIGNAL(triggered()), this, SLOT(slotOpenDocument()));
 
-    QAction *m_save = m_actionBar->addAction(QIcon(QString("data/picture/toolbar/save.png")), tr("Сохранить"));
-    connect(m_save, SIGNAL(triggered()), this, SLOT(slotSaveDocument()));
-    m_actionBar->addSeparator();
+    actionBar->addSeparator();
 
-    QAction *m_refresh = m_actionBar->addAction(QIcon(QString("data/picture/toolbar/refresh.png")), tr("Обновить"));
+    QAction *m_refresh = actionBar->addAction(QIcon(QString("data/picture/toolbar/refresh.png")), tr("Обновить"));
     connect(m_refresh, SIGNAL(triggered()), this, SLOT(slotRefreshDocument()));
 
-    QAction *m_print = m_actionBar->addAction(QIcon(QString("data/picture/toolbar/print.png")), tr("Печать"));
+    QAction *m_print = actionBar->addAction(QIcon(QString("data/picture/toolbar/print.png")), tr("Печать"));
     connect(m_print, SIGNAL(triggered()), this, SLOT(slotPrintDocument()));
 
-    m_actionBar->addSeparator();
+    actionBar->addSeparator();
 
-    QAction *m_cut = m_actionBar->addAction(QIcon(QString("data/picture/toolbar/cut.png")), tr("Вырезать"));
+    QAction *m_cut = actionBar->addAction(QIcon(QString("data/picture/toolbar/cut.png")), tr("Вырезать"));
     connect(m_cut, SIGNAL(triggered()), SLOT(slotCutDocument()));
 
-    QAction *m_copy = m_actionBar->addAction(QIcon(QString("data/picture/toolbar/copy.png")), tr("Копировать"));
+    QAction *m_copy = actionBar->addAction(QIcon(QString("data/picture/toolbar/copy.png")), tr("Копировать"));
     connect(m_copy, SIGNAL(triggered()), this, SLOT(slotCopyDocument()));
 
-    QAction *m_paste = m_actionBar->addAction(QIcon(QString("data/picture/toolbar/paste.png")), tr("Вставить"));
+    QAction *m_paste = actionBar->addAction(QIcon(QString("data/picture/toolbar/paste.png")), tr("Вставить"));
     connect(m_paste, SIGNAL(triggered()), SLOT(slotPasteDocument()));
 
-    QAction *m_delete = m_actionBar->addAction(QIcon(QString("data/picture/toolbar/delete.png")), tr("Удалить"));
+    QAction *m_delete = actionBar->addAction(QIcon(QString("data/picture/toolbar/delete.png")), tr("Удалить"));
     connect(m_delete, SIGNAL(triggered()), this, SLOT(slotDeleteDocument()));
 
-    m_actionBar->addSeparator();
+    actionBar->addSeparator();
 
-//    QAction *m_search = m_actionBar->addAction(QIcon(QString("data/picture/toolbar/find.png")), tr("Найти"));
-//    connect(m_search, SIGNAL(triggered()), this, SLOT(slotSearchDocument()));
-
-//    QAction *m_nl = m_actionBar->addAction(QIcon(QString("data/picture/toolbar/navigate-left.png")), tr("Найти предыдущий"));
-//    connect(m_nl, SIGNAL(triggered()), this, SLOT(slotSearchPrevDocument()));
-
-//    QAction *m_nr = m_actionBar->addAction(QIcon(QString("data/picture/toolbar/navigate-right.png")), tr("Найти следующий"));
-//    connect(m_nr, SIGNAL(triggered()), this, SLOT(slotSearchPrevDocument()));
-
-    QAction *m_actualOrAll = m_actionBar->addAction(QIcon(QString("data/picture/toolbar/actual.png")), tr("Актуальные/Все"));
+    QAction *m_actualOrAll = actionBar->addAction(QIcon(QString("data/picture/toolbar/actual.png")), tr("Актуальные/Все"));
     connect(m_actualOrAll, SIGNAL(triggered()), SLOT(slotActualDocumentsView()));
 
-    m_actionBar->addAction(QIcon(QString("data/picture/toolbar/treelist.png")), tr("Дерево/Список"));
+    actionBar->addAction(QIcon(QString("data/picture/toolbar/treelist.png")), tr("Дерево/Список"));
 
-    m_actionBar->setIconSize(QSize(__ICON__WIDTH, __ICON__HEIGHT));
+    actionBar->setIconSize(QSize(__ICON__WIDTH, __ICON__HEIGHT));
 }
 
-void LogisticMainWindow::setupStatusBar(bool visible)
+void CLogisticMainWindow::setupStatusBar(const bool &visible)
 {
     if (!visible) return;
 
@@ -215,25 +203,25 @@ void LogisticMainWindow::setupStatusBar(bool visible)
 
     QDate  *d = new QDate();
 
-    QLabel *m_lblDate     = new QLabel(" Дата: <b>" + d->currentDate().toString("ddd, dd/MM/yyyy г. ") + "</b>");
-    m_lblDate->setMinimumSize(m_lblDate->sizeHint());
+    QLabel *labelDate = new QLabel(" Дата: <b>" + d->currentDate().toString("ddd, dd/MM/yyyy г. ") + "</b>\t");
+            labelDate->setMinimumSize(labelDate->sizeHint());
 
-    QLabel *m_lblDatabase = new QLabel(" База данных: <b>" + LogisticApplication::instance()->dbname() + "</b>");
+    QLabel *labelDatabase = new QLabel(" База данных: <b>" + CLogisticApplication::instance()->dbname() + "</b>\t");
 
-    statusBar()->addWidget(m_lblDate);
-    statusBar()->addWidget(m_lblDatabase);
+    statusBar()->addWidget(labelDate);
+    statusBar()->addWidget(labelDatabase);
 }
 
-void LogisticMainWindow::updateWindowTitle(const QString &title)
+void CLogisticMainWindow::updateWindowTitle(const QString &title)
 {
     if (title.isEmpty()) {
-        setWindowTitle(tr("CRM R-Loine"));
+        setWindowTitle(tr("CRM R-Line"));
     } else {
         setWindowTitle(tr("%1").arg(title));
     }
 }
 
-void LogisticMainWindow::execAction(const QString &stored, const QVariant &arg)
+void CLogisticMainWindow::execAction(const QString &stored, const QVariant &arg)
 {
     QGenericArgument genericArgument;
 
@@ -243,160 +231,167 @@ void LogisticMainWindow::execAction(const QString &stored, const QVariant &arg)
 
     if (activeMdiWindow()){
 
-        if ( LogisticApplication::instance()->positions != nullptr ){
-            if ( activeMdiWindow()->accessibleDescription() == LogisticApplication::instance()->positions->metaObject()->className() ) {
-                QMetaObject::invokeMethod(LogisticApplication::instance()->positions,
+        if ( CLogisticApplication::instance()->position != nullptr ){
+            if ( activeMdiWindow()->accessibleDescription() == CLogisticApplication::instance()->position->metaObject()->className() ) {
+                QMetaObject::invokeMethod(CLogisticApplication::instance()->position,
                                           QString("%1").arg(stored).toUtf8().constData(), genericArgument);
             }
         }
 
-        if ( LogisticApplication::instance()->tasktype != nullptr ) {
-            if ( activeMdiWindow()->accessibleDescription() == LogisticApplication::instance()->tasktype->metaObject()->className() ) {
-                QMetaObject::invokeMethod(LogisticApplication::instance()->tasktype,
+        if ( CLogisticApplication::instance()->tasktype != nullptr ) {
+            if ( activeMdiWindow()->accessibleDescription() == CLogisticApplication::instance()->tasktype->metaObject()->className() ) {
+                QMetaObject::invokeMethod(CLogisticApplication::instance()->tasktype,
                                           QString("%1").arg(stored).toUtf8().constData(), genericArgument);
             }
         }
 
-        if ( LogisticApplication::instance()->contractortype != nullptr ) {
-            if ( activeMdiWindow()->accessibleDescription() == LogisticApplication::instance()->contractortype->metaObject()->className() ) {
-                QMetaObject::invokeMethod(LogisticApplication::instance()->contractortype,
+        if ( CLogisticApplication::instance()->contractortype != nullptr ) {
+            if ( activeMdiWindow()->accessibleDescription() == CLogisticApplication::instance()->contractortype->metaObject()->className() ) {
+                QMetaObject::invokeMethod(CLogisticApplication::instance()->contractortype,
                                           QString("%1").arg(stored).toUtf8().constData(), genericArgument);
             }
         }
 
-        if ( LogisticApplication::instance()->status != nullptr ) {
-            if ( activeMdiWindow()->accessibleDescription() == LogisticApplication::instance()->status->metaObject()->className() ) {
-                QMetaObject::invokeMethod(LogisticApplication::instance()->status,
+        if ( CLogisticApplication::instance()->status != nullptr ) {
+            if ( activeMdiWindow()->accessibleDescription() == CLogisticApplication::instance()->status->metaObject()->className() ) {
+                QMetaObject::invokeMethod(CLogisticApplication::instance()->status,
                                           QString("%1").arg(stored).toUtf8().constData(), genericArgument);
             }
         }
 
-        if ( LogisticApplication::instance()->priorities != nullptr ) {
-            if ( activeMdiWindow()->accessibleDescription() == LogisticApplication::instance()->priorities->metaObject()->className() ) {
-                QMetaObject::invokeMethod(LogisticApplication::instance()->priorities,
+        if ( CLogisticApplication::instance()->priority != nullptr ) {
+            if ( activeMdiWindow()->accessibleDescription() == CLogisticApplication::instance()->priority->metaObject()->className() ) {
+                QMetaObject::invokeMethod(CLogisticApplication::instance()->priority,
                                           QString("%1").arg(stored).toUtf8().constData(), genericArgument);
             }
         }
 
-        if ( LogisticApplication::instance()->countryandcity != nullptr ) {
-            if ( activeMdiWindow()->accessibleDescription() == LogisticApplication::instance()->countryandcity->metaObject()->className() ) {
-                QMetaObject::invokeMethod(LogisticApplication::instance()->countryandcity,
+        if ( CLogisticApplication::instance()->countrycity != nullptr ) {
+            if ( activeMdiWindow()->accessibleDescription() == CLogisticApplication::instance()->countrycity->metaObject()->className() ) {
+                QMetaObject::invokeMethod(CLogisticApplication::instance()->countrycity,
                                           QString("%1").arg(stored).toUtf8().constData(), genericArgument);
             }
         }
 
-//        if ( LogisticApplication::instance()->accountingoperation != nullptr ) {
-//            if ( activeMdiWindow()->accessibleDescription() == LogisticApplication::instance()->accountingoperation->metaObject()->className() ) {
-//                QMetaObject::invokeMethod(LogisticApplication::instance()->accountingoperation,
-//                                          QString("%1").arg(stored).toUtf8().constData(), genericArgument);
-//            }
-//        }
+        if ( CLogisticApplication::instance()->customer != nullptr ) {
+            if ( activeMdiWindow()->accessibleDescription() == CLogisticApplication::instance()->customer->metaObject()->className() ) {
+                QMetaObject::invokeMethod(CLogisticApplication::instance()->customer,
+                                          QString("%1").arg(stored).toUtf8().constData(), genericArgument);
+            }
+        }
+
+        if ( CLogisticApplication::instance()->supplier != nullptr ) {
+            if ( activeMdiWindow()->accessibleDescription() == CLogisticApplication::instance()->supplier->metaObject()->className() ) {
+                QMetaObject::invokeMethod(CLogisticApplication::instance()->supplier,
+                                          QString("%1").arg(stored).toUtf8().constData(), genericArgument);
+            }
+        }
     }
 }
 
-void LogisticMainWindow::setupDockWindow(bool visible)
+void CLogisticMainWindow::setupDockWindow(const bool &visible)
 {
     if (!visible) return;
 
     QDockWidget *dockDictionary = new QDockWidget(tr("Справочники"));
-    dockDictionary->setFeatures(QDockWidget::NoDockWidgetFeatures);
+                 dockDictionary->setFeatures(QDockWidget::NoDockWidgetFeatures);
 
     QFrame *frameDictionary = new QFrame(this);
 
-    QCommandLinkButton *m_client = new QCommandLinkButton(tr("Заказчики"), tr("Справочник клиентов"), frameDictionary);
-    m_client->setIcon(QIcon("data/picture/sidebar/customer.ico"));
-    connect(m_client, SIGNAL(clicked()), this, SLOT(slotCustomerDictionary()));
+    QCommandLinkButton *client = new QCommandLinkButton(tr("Заказчики"), tr("Справочник клиентов"), frameDictionary);
+                        client->setIcon(QIcon("data/picture/sidebar/customer.ico"));
+    connect(client, SIGNAL(clicked()), this, SLOT(slotCustomerDictionary()));
 
-    QCommandLinkButton *m_supplier = new QCommandLinkButton(tr("Поставщики"), tr("Справочник поставщиков"), frameDictionary);
-    m_supplier->setIcon(QIcon("data/picture/sidebar/suppliers.ico"));
-    connect(m_supplier, SIGNAL(clicked()), this, SLOT(slotSuppliersDictionary()));
+    QCommandLinkButton *supplier = new QCommandLinkButton(tr("Поставщики"), tr("Справочник поставщиков"), frameDictionary);
+                        supplier->setIcon(QIcon("data/picture/sidebar/suppliers.ico"));
+    connect(supplier, SIGNAL(clicked()), this, SLOT(slotSuppliersDictionary()));
 
-    QCommandLinkButton *m_producer = new QCommandLinkButton(tr("Производители"), tr("Справочник производителей"), frameDictionary);
-    m_producer->setIcon(QIcon("data/picture/sidebar/producers.ico"));
-    connect(m_producer, SIGNAL(clicked()), this, SLOT(slotProdusersDictionary()));
+    QCommandLinkButton *producer = new QCommandLinkButton(tr("Производители"), tr("Справочник производителей"), frameDictionary);
+                        producer->setIcon(QIcon("data/picture/sidebar/producers.ico"));
+    connect(producer, SIGNAL(clicked()), this, SLOT(slotProdusersDictionary()));
 
-    QCommandLinkButton *m_contact = new QCommandLinkButton(tr("Контакты"), tr("Справочник контактов"), frameDictionary);
-    m_contact->setIcon(QIcon("data/picture/sidebar/contacts.ico"));
-    connect(m_contact, SIGNAL(clicked()), this, SLOT(slotContactsDictionary()));
+    QCommandLinkButton *contact = new QCommandLinkButton(tr("Контакты"), tr("Справочник контактов"), frameDictionary);
+                        contact->setIcon(QIcon("data/picture/sidebar/contacts.ico"));
+    connect(contact, SIGNAL(clicked()), this, SLOT(slotContactsDictionary()));
 
-    QCommandLinkButton *m_position = new QCommandLinkButton (tr("Должности"), tr("Справочник должностей"), frameDictionary);
-    m_position->setIcon(QIcon("data/picture/sidebar/positions.ico"));
-    connect(m_position, SIGNAL(clicked()), this, SLOT(slotPositionsDictionary()));
+    QCommandLinkButton *position = new QCommandLinkButton (tr("Должности"), tr("Справочник должностей"), frameDictionary);
+                        position->setIcon(QIcon("data/picture/sidebar/positions.ico"));
+    connect(position, SIGNAL(clicked()), this, SLOT(slotPositionsDictionary()));
 
-    QCommandLinkButton *m_tasktype = new QCommandLinkButton (tr("Типы задач"), tr("Справочник типов задач"), frameDictionary);
-    m_tasktype->setIcon(QIcon("data/picture/sidebar/tasktype.ico"));
-    connect(m_tasktype, SIGNAL(clicked()), this, SLOT(slotTaskTypesDictionary()));
+    QCommandLinkButton *tasktype = new QCommandLinkButton (tr("Типы задач"), tr("Справочник типов задач"), frameDictionary);
+                        tasktype->setIcon(QIcon("data/picture/sidebar/tasktype.ico"));
+    connect(tasktype, SIGNAL(clicked()), this, SLOT(slotTaskTypesDictionary()));
 
-    QCommandLinkButton *m_contractor = new QCommandLinkButton(tr("Контрагенты"), tr("Справочник контрагентов"), frameDictionary);
-    m_contractor->setIcon(QIcon("data/picture/sidebar/contractortype.ico"));
-    connect(m_contractor, SIGNAL(clicked()), this, SLOT(slotContractorTypesDictionary()));
+    QCommandLinkButton *contractor = new QCommandLinkButton(tr("Контрагенты"), tr("Справочник контрагентов"), frameDictionary);
+                        contractor->setIcon(QIcon("data/picture/sidebar/contractortype.ico"));
+    connect(contractor, SIGNAL(clicked()), this, SLOT(slotContractorTypesDictionary()));
 
-    QCommandLinkButton *m_status = new QCommandLinkButton (tr("Статусы"), tr("Справочник статусов"), frameDictionary);
-    m_status->setIcon(QIcon("data/picture/sidebar/status.ico"));
-    connect(m_status, SIGNAL(clicked()), this, SLOT(slotStatusDictionary()));
+    QCommandLinkButton *status = new QCommandLinkButton (tr("Статусы"), tr("Справочник статусов"), frameDictionary);
+                        status->setIcon(QIcon("data/picture/sidebar/status.ico"));
+    connect(status, SIGNAL(clicked()), this, SLOT(slotStatusDictionary()));
 
-    QCommandLinkButton *m_priority = new QCommandLinkButton (tr("Приоритеты"), tr("Справочник приоритетов"), frameDictionary);
-    m_priority->setIcon(QIcon("data/picture/sidebar/priority.ico"));
-    connect(m_priority, SIGNAL(clicked()), this, SLOT(slotPrioritiesDictionary()));
+    QCommandLinkButton *priority = new QCommandLinkButton (tr("Приоритеты"), tr("Справочник приоритетов"), frameDictionary);
+                        priority->setIcon(QIcon("data/picture/sidebar/priority.ico"));
+    connect(priority, SIGNAL(clicked()), this, SLOT(slotPrioritiesDictionary()));
 
-    QCommandLinkButton *m_cityandcountry = new QCommandLinkButton (tr("Страны и города"), tr("Справочник стран и городов"), frameDictionary);
-    m_cityandcountry->setIcon(QIcon("data/picture/sidebar/countryandcity.ico"));
-    connect(m_cityandcountry, SIGNAL(clicked()), this, SLOT(slotCountryAndCityDictionary()));
+    QCommandLinkButton *countrycity = new QCommandLinkButton (tr("Страны и города"), tr("Справочник стран и городов"), frameDictionary);
+                        countrycity->setIcon(QIcon("data/picture/sidebar/countryandcity.ico"));
+    connect(countrycity, SIGNAL(clicked()), this, SLOT(slotCountryCityDictionary()));
 
     QVBoxLayout *vboxDictionary = new QVBoxLayout(frameDictionary);
-    vboxDictionary->setSizeConstraint(QVBoxLayout::SetMinAndMaxSize);
-    vboxDictionary->addWidget(m_client);
-    vboxDictionary->addWidget(m_supplier);
-    vboxDictionary->addWidget(m_producer);
-    vboxDictionary->addWidget(m_contact);
-    vboxDictionary->addWidget(m_position);
-    vboxDictionary->addWidget(m_tasktype);
-    vboxDictionary->addWidget(m_contractor);
-    vboxDictionary->addWidget(m_status);
-    vboxDictionary->addWidget(m_priority);
-    vboxDictionary->addWidget(m_cityandcountry);
+                 vboxDictionary->setSizeConstraint(QVBoxLayout::SetMinAndMaxSize);
+                 vboxDictionary->addWidget(client);
+                 vboxDictionary->addWidget(supplier);
+                 vboxDictionary->addWidget(producer);
+                 vboxDictionary->addWidget(contact);
+                 vboxDictionary->addWidget(position);
+                 vboxDictionary->addWidget(tasktype);
+                 vboxDictionary->addWidget(contractor);
+                 vboxDictionary->addWidget(status);
+                 vboxDictionary->addWidget(priority);
+                 vboxDictionary->addWidget(countrycity);
 
     dockDictionary->setLayout(vboxDictionary);
     dockDictionary->setWidget(frameDictionary);
 
     QDockWidget *dockFolder = new QDockWidget(tr("Папки"));
-    dockFolder->setFeatures(QDockWidget::NoDockWidgetFeatures);
+                 dockFolder->setFeatures(QDockWidget::NoDockWidgetFeatures);
 
     QFrame *frameFolder = new QFrame(this);
 
-    QCommandLinkButton *m_relation = new QCommandLinkButton(tr("Взаимоотношения"), frameFolder);
-    m_relation->setIcon(QIcon("data/picture/sidebar/relations.ico"));
-    connect(m_relation, SIGNAL(clicked()), this, SLOT(slotRelationsFolder()));
+    QCommandLinkButton *relation = new QCommandLinkButton(tr("Взаимоотношения"), frameFolder);
+                        relation->setIcon(QIcon("data/picture/sidebar/relations.ico"));
+    connect(relation, SIGNAL(clicked()), this, SLOT(slotRelationsFolder()));
 
-    QCommandLinkButton *m_calendar = new QCommandLinkButton (tr("Календарь"), frameFolder);
-    m_calendar->setIcon(QIcon("data/picture/sidebar/calendar.ico"));
-    connect(m_calendar, SIGNAL(clicked()), this, SLOT(slotCalendarFolder()));
+    QCommandLinkButton *calendar = new QCommandLinkButton (tr("Календарь"), frameFolder);
+                        calendar->setIcon(QIcon("data/picture/sidebar/calendar.ico"));
+    connect(calendar, SIGNAL(clicked()), this, SLOT(slotCalendarFolder()));
 
-    QCommandLinkButton *m_reminder = new QCommandLinkButton (tr("Напоминания"), frameFolder);
-    m_reminder->setIcon(QIcon("data/picture/sidebar/reminder.ico"));
-    connect(m_reminder, SIGNAL(clicked()), this, SLOT(slotReminderFolder()));
+    QCommandLinkButton *reminder = new QCommandLinkButton (tr("Напоминания"), frameFolder);
+                        reminder->setIcon(QIcon("data/picture/sidebar/reminder.ico"));
+    connect(reminder, SIGNAL(clicked()), this, SLOT(slotReminderFolder()));
 
     QVBoxLayout *vboxFolder = new QVBoxLayout(frameFolder);
-    vboxFolder->setSizeConstraint(QVBoxLayout::SetMinAndMaxSize);
-    vboxFolder->addWidget(m_relation);
-    vboxFolder->addWidget(m_calendar);
-    vboxFolder->addWidget(m_reminder);
+                 vboxFolder->setSizeConstraint(QVBoxLayout::SetMinAndMaxSize);
+                 vboxFolder->addWidget(relation);
+                 vboxFolder->addWidget(calendar);
+                 vboxFolder->addWidget(reminder);
 
     dockFolder->setLayout(vboxFolder);
     dockFolder->setWidget(frameFolder);
 
     QDockWidget *dockAdditionally = new QDockWidget(tr("Дополнительно"));
-    dockAdditionally->setFeatures(QDockWidget::NoDockWidgetFeatures);
+                 dockAdditionally->setFeatures(QDockWidget::NoDockWidgetFeatures);
 
     QFrame *frameAdditionally = new QFrame(this);
 
-    QCommandLinkButton *m_accounting = new QCommandLinkButton(tr("Учетные операции"), tr("Справочник УО"), frameAdditionally);
-    m_accounting->setIcon(QIcon("data/picture/sidebar/accounting.png"));
-    connect(m_accounting, SIGNAL(clicked()), this, SLOT(slotAccountingAdditionally()));
+    QCommandLinkButton *accounting = new QCommandLinkButton(tr("Учетные операции"), tr("Справочник УО"), frameAdditionally);
+                        accounting->setIcon(QIcon("data/picture/sidebar/accounting.png"));
+    connect(accounting, SIGNAL(clicked()), this, SLOT(slotAccountingAdditionally()));
 
     QVBoxLayout *vboxAdditionally = new QVBoxLayout(frameAdditionally);
-    vboxAdditionally->setSizeConstraint(QVBoxLayout::SetMinAndMaxSize);
-    vboxAdditionally->addWidget(m_accounting);
+                 vboxAdditionally->setSizeConstraint(QVBoxLayout::SetMinAndMaxSize);
+                 vboxAdditionally->addWidget(accounting);
 
     dockAdditionally->setLayout(vboxAdditionally);
     dockAdditionally->setWidget(frameAdditionally);
@@ -409,277 +404,256 @@ void LogisticMainWindow::setupDockWindow(bool visible)
     tabifyDockWidget(dockFolder, dockAdditionally);
 }
 
-void LogisticMainWindow::slotNewDocument()
+void CLogisticMainWindow::slotNewDocument()
 {
-    execAction("slotCreateEditDialog", (int)0);
+    execAction("slotCreateEditDialog", QString("add"));
 }
 
-void LogisticMainWindow::slotOpenDocument()
+void CLogisticMainWindow::slotOpenDocument()
 {
-    execAction("slotCreateEditDialog", (int)1);
+    execAction("slotCreateEditDialog", QString("edit"));
 }
 
-void LogisticMainWindow::slotSaveDocument()
-{
-}
-
-void LogisticMainWindow::slotPrintDocument()
+void CLogisticMainWindow::slotPrintDocument()
 {
 }
 
-void LogisticMainWindow::slotCutDocument()
+void CLogisticMainWindow::slotCutDocument()
 {
-    execAction("slotCutRecords", QVariant());
+    execAction("slotCutRecords");
 }
 
-void LogisticMainWindow::slotCopyDocument()
+void CLogisticMainWindow::slotCopyDocument()
 {
-    execAction("slotCopyRecords", QVariant());
+    execAction("slotCopyRecords");
 }
 
-void LogisticMainWindow::slotPasteDocument()
+void CLogisticMainWindow::slotPasteDocument()
 {
-    execAction("slotPasteRecords", QVariant());
+    execAction("slotPasteRecords");
 }
 
-void LogisticMainWindow::slotDeleteDocument()
+void CLogisticMainWindow::slotDeleteDocument()
 {
-    execAction("slotDeleteRecords", QVariant());
+    execAction("slotDeleteRecords");
 }
 
-//void LogisticMainWindow::slotSearchDocument()
-//{
-//}
-
-//void LogisticMainWindow::slotSearchNextDocument()
-//{
-//}
-
-//void LogisticMainWindow::slotSearchPrevDocument()
-//{
-//}
-
-void LogisticMainWindow::slotRefreshDocument()
+void CLogisticMainWindow::slotRefreshDocument()
 {
-    execAction("slotRefreshRecords", QVariant());
+    execAction("slotRefreshRecords");
 }
 
-void LogisticMainWindow::slotOwnerDocument()
+void CLogisticMainWindow::slotOwnerDocument()
 {
 }
 
-void LogisticMainWindow::slotRelationsFolder()
+void CLogisticMainWindow::slotRelationsFolder()
 {
 }
 
-void LogisticMainWindow::slotCalendarFolder() const
+void CLogisticMainWindow::slotCalendarFolder() const
 {
 }
 
-void LogisticMainWindow::slotReminderFolder()
+void CLogisticMainWindow::slotReminderFolder()
 {
 }
 
-void LogisticMainWindow::slotCustomerDictionary()
+void CLogisticMainWindow::slotCustomerDictionary()
 {
-    QMdiSubWindow *msw = this->findMdiWindow("Заказчики");
+    QMdiSubWindow *msw = findMdiWindow("Заказчики");
     if (!msw){
-        this->showMdiWindow(LogisticApplication::createCustomer(),
-                            "Заказчики",
-                            QIcon(QString("data/picture/sidebar/customer.ico")));
+         showMdiWindow(CLogisticApplication::instance()->createCustomer(),
+                       "Заказчики",
+                       QIcon(QString("data/picture/sidebar/customer.ico")));
     } else {
-        msw->setFocus();
+         msw->setFocus();
     }
 }
 
-void LogisticMainWindow::slotSuppliersDictionary()
+void CLogisticMainWindow::slotSuppliersDictionary()
 {
-    QMdiSubWindow *msw = this->findMdiWindow("Поставщики");
+    QMdiSubWindow *msw = findMdiWindow("Поставщики");
     if (!msw){
-        this->showMdiWindow(LogisticApplication::createSappliers(),
-                            "Поставщики",
-                            QIcon(QString("data/picture/sidebar/suppliers.ico")));
+         showMdiWindow(CLogisticApplication::instance()->createSappliers(),
+                       "Поставщики",
+                       QIcon(QString("data/picture/sidebar/suppliers.ico")));
     } else {
-        msw->setFocus();
+         msw->setFocus();
     }
 }
 
-void LogisticMainWindow::slotProdusersDictionary()
+void CLogisticMainWindow::slotProdusersDictionary()
 {
+    QMessageBox::information(0, "title", "Производители");
 }
 
-void LogisticMainWindow::slotContactsDictionary()
+void CLogisticMainWindow::slotContactsDictionary()
 {
-    QMdiSubWindow *msw = this->findMdiWindow("Контакты");
+    QMdiSubWindow *msw = findMdiWindow("Контакты");
     if (!msw){
-        this->showMdiWindow(LogisticApplication::createContacts(),
-                            "Контакты",
-                            QIcon(QString("data/picture/sidebar/contacts.ico")));
+         showMdiWindow(CLogisticApplication::instance()->createContacts(),
+                       "Контакты",
+                       QIcon(QString("data/picture/sidebar/contacts.ico")));
     } else {
-        msw->setFocus();
+         msw->setFocus();
     }
 }
 
-void LogisticMainWindow::slotPositionsDictionary()
+void CLogisticMainWindow::slotPositionsDictionary()
 {
-    QMdiSubWindow *msw = this->findMdiWindow("Должности");
+    QMdiSubWindow *msw = findMdiWindow("Должности");
     if (!msw){
-        this->showMdiWindow(LogisticApplication::createPosition(),
-                            "Должности",
-                            QIcon(QString("data/picture/sidebar/positions.ico")));
+         showMdiWindow(CLogisticApplication::instance()->createPosition(),
+                       "Должности",
+                       QIcon(QString("data/picture/sidebar/positions.ico")));
     } else {
-        msw->setFocus();
+         msw->setFocus();
     }
 }
 
-void LogisticMainWindow::slotTaskTypesDictionary()
+void CLogisticMainWindow::slotTaskTypesDictionary()
 {
-    QMdiSubWindow *msw = this->findMdiWindow("Типы задач");
+    QMdiSubWindow *msw = findMdiWindow("Типы задач");
     if (!msw){
-        this->showMdiWindow(LogisticApplication::createTaskType(),
-                            "Типы задач",
-                            QIcon(QString("data/picture/sidebar/tasktype.ico")));
+         showMdiWindow(CLogisticApplication::instance()->createTaskType(),
+                       "Типы задач",
+                       QIcon(QString("data/picture/sidebar/tasktype.ico")));
     } else {
-        msw->setFocus();
+         msw->setFocus();
     }
 }
 
-void LogisticMainWindow::slotContractorTypesDictionary()
+void CLogisticMainWindow::slotContractorTypesDictionary()
 {
-    QMdiSubWindow *msw = this->findMdiWindow("Типы контрагентов");
+    QMdiSubWindow *msw = findMdiWindow("Типы контрагентов");
     if (!msw){
-        this->showMdiWindow(LogisticApplication::createContractorType(),
-                            "Типы контрагентов",
-                            QIcon(QString("data/picture/sidebar/contractortype.ico")));
+         showMdiWindow(CLogisticApplication::instance()->createContractorType(),
+                       "Типы контрагентов",
+                       QIcon(QString("data/picture/sidebar/contractortype.ico")));
     } else {
-        msw->setFocus();
+         msw->setFocus();
     }
 }
 
-void LogisticMainWindow::slotStatusDictionary()
+void CLogisticMainWindow::slotStatusDictionary()
 {
-    QMdiSubWindow *msw = this->findMdiWindow("Статусы");
+    QMdiSubWindow *msw = findMdiWindow("Статусы");
     if (!msw){
-        this->showMdiWindow(LogisticApplication::createStatus(),
-                            "Статусы",
-                            QIcon(QString("data/picture/sidebar/status.ico")));
+         showMdiWindow(CLogisticApplication::instance()->createStatus(),
+                       "Статусы",
+                       QIcon(QString("data/picture/sidebar/status.ico")));
     } else {
-        msw->setFocus();
+         msw->setFocus();
     }
 }
 
-void LogisticMainWindow::slotPrioritiesDictionary()
+void CLogisticMainWindow::slotPrioritiesDictionary()
 {
-    QMdiSubWindow *msw = this->findMdiWindow("Приоритеты");
+    QMdiSubWindow *msw = findMdiWindow("Приоритеты");
     if (!msw){
-        this->showMdiWindow(LogisticApplication::createPriorities(),
-                            "Приоритеты",
-                            QIcon(QString("data/picture/sidebar/priority.ico")));
+         showMdiWindow(CLogisticApplication::instance()->createPriorities(),
+                       "Приоритеты",
+                       QIcon(QString("data/picture/sidebar/priority.ico")));
     } else {
-        msw->setFocus();
+         msw->setFocus();
     }
 }
 
-void LogisticMainWindow::slotCountryAndCityDictionary()
+void CLogisticMainWindow::slotCountryCityDictionary()
 {
-    QMdiSubWindow *msw = this->findMdiWindow("Страны и города");
+    QMdiSubWindow *msw = findMdiWindow("Страны и города");
     if (!msw){
-        this->showMdiWindow(LogisticApplication::createCountryAndCity(),
-                            "Страны и города",
-                            QIcon(QString("data/picture/sidebar/countryandcity.ico")));
+         showMdiWindow(CLogisticApplication::instance()->createCountryCity(),
+                       "Страны и города",
+                       QIcon(QString("data/picture/sidebar/countryandcity.ico")));
     } else {
-        msw->setFocus();
+         msw->setFocus();
     }
 }
 
-void LogisticMainWindow::slotActualDocumentsView()
+
+void CLogisticMainWindow::slotActualDocumentsView()
 {
     if (activeMdiWindow()){
 
-        if ( LogisticApplication::instance()->positions != nullptr ){
-            if (activeMdiWindow()->accessibleDescription() == LogisticApplication::instance()->positions->metaObject()->className()) {
-                execAction("slotActualRecords", LogisticApplication::instance()->positions->actualRecords);
+        if ( CLogisticApplication::instance()->position != nullptr ){
+            if (activeMdiWindow()->accessibleDescription() == CLogisticApplication::instance()->position->metaObject()->className()) {
+                execAction("slotActualRecords", CLogisticApplication::instance()->position->actualRecords);
             }
         }
 
-        if ( LogisticApplication::instance()->contractortype != nullptr ){
-            if (activeMdiWindow()->accessibleDescription() == LogisticApplication::instance()->contractortype->metaObject()->className()) {
-                execAction("slotActualRecords", LogisticApplication::instance()->contractortype->actualRecords);
+        if ( CLogisticApplication::instance()->contractortype != nullptr ){
+            if (activeMdiWindow()->accessibleDescription() == CLogisticApplication::instance()->contractortype->metaObject()->className()) {
+                execAction("slotActualRecords", CLogisticApplication::instance()->contractortype->actualRecords);
             }
         }
 
 
-        if ( LogisticApplication::instance()->tasktype != nullptr ) {
-            if ( activeMdiWindow()->accessibleDescription() == LogisticApplication::instance()->tasktype->metaObject()->className() ) {
-                execAction("slotActualRecords", LogisticApplication::instance()->tasktype->actualRecords);
+        if ( CLogisticApplication::instance()->tasktype != nullptr ) {
+            if ( activeMdiWindow()->accessibleDescription() == CLogisticApplication::instance()->tasktype->metaObject()->className() ) {
+                execAction("slotActualRecords", CLogisticApplication::instance()->tasktype->actualRecords);
             }
         }
 
-        if ( LogisticApplication::instance()->status != nullptr ) {
-            if ( activeMdiWindow()->accessibleDescription() == LogisticApplication::instance()->status->metaObject()->className() ) {
-                execAction("slotActualRecords", LogisticApplication::instance()->status->actualRecords);
+        if ( CLogisticApplication::instance()->status != nullptr ) {
+            if ( activeMdiWindow()->accessibleDescription() == CLogisticApplication::instance()->status->metaObject()->className() ) {
+                execAction("slotActualRecords", CLogisticApplication::instance()->status->actualRecords);
             }
         }
 
-        if ( LogisticApplication::instance()->priorities != nullptr ) {
-            if ( activeMdiWindow()->accessibleDescription() == LogisticApplication::instance()->priorities->metaObject()->className() ) {
-                execAction("slotActualRecords", LogisticApplication::instance()->priorities->actualRecords);
+        if ( CLogisticApplication::instance()->priority != nullptr ) {
+            if ( activeMdiWindow()->accessibleDescription() == CLogisticApplication::instance()->priority->metaObject()->className() ) {
+                execAction("slotActualRecords", CLogisticApplication::instance()->priority->actualRecords);
             }
         }
 
-        if ( LogisticApplication::instance()->countryandcity != nullptr ) {
-            if ( activeMdiWindow()->accessibleDescription() == LogisticApplication::instance()->countryandcity->metaObject()->className() ) {
-                execAction("slotActualRecords", LogisticApplication::instance()->countryandcity->actualRecords);
+        if ( CLogisticApplication::instance()->countrycity != nullptr ) {
+            if ( activeMdiWindow()->accessibleDescription() == CLogisticApplication::instance()->countrycity->metaObject()->className() ) {
+                execAction("slotActualRecords", CLogisticApplication::instance()->countrycity->actualRecords);
             }
         }
-
-//        if ( LogisticApplication::instance()->accountingoperation != nullptr ) {
-//            if ( activeMdiWindow()->accessibleDescription() == LogisticApplication::instance()->accountingoperation->metaObject()->className() ) {
-//                execAction("slotSelectRecords", LogisticApplication::instance()->accountingoperation->actualRecords);
-//            }
-//        }
-
     }
 }
 
-void LogisticMainWindow::slotTreeDocumentsView()
+void CLogisticMainWindow::slotTreeDocumentsView()
 {
 }
 
-void LogisticMainWindow::connectionWindowShow()
+void CLogisticMainWindow::connectionWindowShow(QWidget *parent)
 {
-    LogisticApplication::connectionDialog(this)->show();
+    CLogisticApplication::instance()->connectionDialog(parent)->show();
 }
 
-MdiWindow *LogisticMainWindow::activeMdiWindow()
+MdiWindow *CLogisticMainWindow::activeMdiWindow()
 {
-    if (QMdiSubWindow *activeSubWindow = m_mdiArea->activeSubWindow())
+    if (QMdiSubWindow *activeSubWindow = mdiArea->activeSubWindow())
         return qobject_cast<MdiWindow *>(activeSubWindow->widget());
-    return 0;
+    return nullptr;
 }
 
-QMdiSubWindow *LogisticMainWindow::findMdiWindow(const QString &title)
+QMdiSubWindow *CLogisticMainWindow::findMdiWindow(const QString &title)
 {
-    foreach (QMdiSubWindow *window, m_mdiArea->subWindowList()) {
-        MdiWindow *m_mdiWindow = qobject_cast<MdiWindow *>(window->widget());
-        if (m_mdiWindow->windowTitle() == title)
-            return window;
+    for (auto *window : mdiArea->subWindowList()) {
+         MdiWindow *mdiWindow = qobject_cast<MdiWindow *>(window->widget());
+         if (mdiWindow->windowTitle() == title)
+             return window;
     }
-    return 0;
+    return nullptr;
 }
 
-void LogisticMainWindow::closeEvent(QCloseEvent *)
+void CLogisticMainWindow::closeEvent(QCloseEvent *)
 {
-    m_mdiArea->closeAllSubWindows();
+    mdiArea->closeAllSubWindows();
     deleteLater();
 }
 
-void LogisticMainWindow::slotGeometryChangeRequested(const QRect &geometry)
+void CLogisticMainWindow::slotGeometryChangeRequested(const QRect &geometry)
 {
     setGeometry(geometry);
 }
 
-void LogisticMainWindow::slotSwitchLayoutDirection()
+void CLogisticMainWindow::slotSwitchLayoutDirection()
 {
     if (layoutDirection() == Qt::LeftToRight)
         qApp->setLayoutDirection(Qt::RightToLeft);
@@ -687,33 +661,23 @@ void LogisticMainWindow::slotSwitchLayoutDirection()
         qApp->setLayoutDirection(Qt::LeftToRight);
 }
 
-void LogisticMainWindow::slotSetActiveSubWindow(QWidget *window)
+void CLogisticMainWindow::slotSetActiveSubWindow(QWidget *window)
 {
     if (!window) return;
-    m_mdiArea->setActiveSubWindow(qobject_cast<QMdiSubWindow *>(window));
+    mdiArea->setActiveSubWindow(qobject_cast<QMdiSubWindow *>(window));
 }
 
-void LogisticMainWindow::slotAccountingAdditionally()
+void CLogisticMainWindow::showMdiWindow(QWidget *widget, const QString &title, const QIcon &icon)
 {
-//    QMdiSubWindow *msw = this->findMdiWindow(tr("Учетные операции"));
-//    if (!msw){
-//        this->showMdiWindow(LogisticApplication::createAccountingOperation(),
-//                            tr("Учетные операции"),
-//                            QIcon(QString("data/picture/sidebar/accounting.png")));
-//    } else {
-//        msw->setFocus();
-//    }
-}
+    CLogisticApplication::instance()->createMdiMindow(title, icon)->show();
 
-void LogisticMainWindow::showMdiWindow(QWidget *widget, const QString &title, const QIcon &icon)
-{
-    LogisticApplication::createMdiMindow(title, icon)->show();
     QHBoxLayout *hbl = new QHBoxLayout;
+                 hbl->layout()->addWidget(widget);
 
-    hbl->layout()->addWidget(widget);
     activeMdiWindow()->setLayout(hbl);
     activeMdiWindow()->setAccessibleDescription(widget->metaObject()->className());
-    m_mdiArea->tileSubWindows();
+
+    mdiArea->tileSubWindows();
 }
 
 

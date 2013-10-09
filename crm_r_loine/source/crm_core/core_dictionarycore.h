@@ -19,21 +19,30 @@
 
 QT_BEGIN_NAMESPACE
 class QDialog;
-QT_END_NAMESPACE
+class QTreeView;
+class QStandardItemModel;
+QT_END_NAMESPACE 
 
 class CDictionaryCore
 {
 protected:
-    virtual QSqlQuery execStored(const QSqlDatabase &database,
-                         const QString &storedFunction,
-                         const QHash<QString, QVariant> &hash = QHash<QString, QVariant>());
-    QSqlDatabase currentDatabase(void) const;
     const QString currentUser(void);
-    const QHash<QString, QVariant> storageHashTable(QList<QVariant> &list);
 
 public:
-    static void clearEditDialog(QDialog *editDialog);
+    static QSqlQuery execStored(const QSqlDatabase &database,
+                         const QString &storedFunction,
+                         const QHash<QString, QVariant> &hash = QHash<QString, QVariant>());
+    static const QSqlDatabase currentDatabase(void);
+    static const QHash<QString, QVariant> storageHashTable(const QList<QVariant> &list = QList<QVariant>());
+    static void clearEditDialog(QDialog *dialog);
 
+    template <class T, class Q, template <class> class W>
+              static void columnHidden (T *view, Q *model, W<int> &storage){
+                      for (short i(0); i != model->columnCount(); ++i){
+                          if (storage.contains(i))
+                              view->setColumnHidden(i, true);
+                      }
+              }
 };
 
 class CFilter : public QLineEdit

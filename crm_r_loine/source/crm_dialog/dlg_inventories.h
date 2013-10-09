@@ -8,6 +8,7 @@
 #include <QtGui/QListWidget>
 #include <QtGui/QLineEdit>
 #include <QtGui/QToolButton>
+#include <QtGui/QMenu>
 
 namespace Ui {
 class InventoriesDialog;
@@ -25,25 +26,16 @@ public:
 
 protected:
     void closeEvent(QCloseEvent *);
-    void showEvent(QShowEvent *);
 
 signals:
     void saveDataChanged();
 
 private slots:
-    void slotCurrentChanged() { updateActions(); }
     void slotSaveDataChanged();
 
-private:
-    void updateActions();
-
-    QToolButton *buttonAdd;
-    QToolButton *buttonEdit;
-    QToolButton *buttonDelete;
-    
 public:
     Ui::InventoriesDialog *ui;
-
+    QMenu                 *menu;
     ListWidgetAccountingTransaction *listWidgetAccountingTransaction;
 };
 

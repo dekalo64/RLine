@@ -42,29 +42,35 @@ class QSignalMapper;
 QT_END_NAMESPACE
 
 
-class LogisticMainWindow : public QMainWindow {
+class CLogisticMainWindow : public QMainWindow {
     Q_OBJECT
     
 public:
-    explicit LogisticMainWindow(QWidget *parent = 0, Qt::WindowFlags flags = 0);
-    virtual ~LogisticMainWindow();
+    explicit CLogisticMainWindow(QWidget *parent = 0, Qt::WindowFlags flags = 0);
+    virtual ~CLogisticMainWindow();
+
     QSize sizeHint() const;
+
+    static CLogisticMainWindow *instance(){
+        if (!self){
+             self = new CLogisticMainWindow();
+        }
+        return static_cast<CLogisticMainWindow *>(self);
+    }
 
 protected:
     void closeEvent(QCloseEvent *);
 
+    static CLogisticMainWindow *self;
+
 private slots:
     void slotNewDocument();
     void slotOpenDocument();
-    void slotSaveDocument();
     void slotPrintDocument();
     void slotCutDocument();
     void slotCopyDocument();
     void slotPasteDocument();
     void slotDeleteDocument();
-//    void slotSearchDocument();
-//    void slotSearchNextDocument();
-//    void slotSearchPrevDocument();
     void slotRefreshDocument();
     void slotOwnerDocument();
     void slotActualDocumentsView();
@@ -76,43 +82,46 @@ private slots:
 
     void slotCustomerDictionary();
     void slotSuppliersDictionary();
-    void slotProdusersDictionary();
     void slotContactsDictionary();
     void slotPositionsDictionary();
     void slotTaskTypesDictionary();
     void slotContractorTypesDictionary();
     void slotStatusDictionary();
     void slotPrioritiesDictionary();
-    void slotCountryAndCityDictionary();
 
     void slotGeometryChangeRequested(const QRect &geometry);
 
     void slotSwitchLayoutDirection();
     void slotSetActiveSubWindow(QWidget *window);
 
-    void slotAccountingAdditionally();
+public slots:
+    void slotCountryCityDictionary();
+    void slotProdusersDictionary();
 
 private:
-    void connectionWindowShow();
+    void connectionWindowShow(QWidget *parent = 0);
+
     MdiWindow      *activeMdiWindow();
     QMdiSubWindow  *findMdiWindow(const QString &title);
+
     void showMdiWindow(QWidget *widget, const QString &title, const QIcon &icon);
     void updateWindowTitle(const QString &title = QString());
-    void execAction(const QString &stored, const QVariant &arg);
+    void execAction(const QString &stored, const QVariant &arg = QVariant());
+
+public:
+    QMdiArea *mdiArea;
 
     friend class MdiWindow;
 
-public:
-    QMdiArea *m_mdiArea;
-    void setupDockWindow(bool visible);
-    void setupMenu(bool visible);
-    void setupToolBar(bool visible);
-    void setupStatusBar(bool visible);
+    void setupDockWindow (const bool &visible);
+    void setupMenu       (const bool &visible);
+    void setupToolBar    (const bool &visible);
+    void setupStatusBar  (const bool &visible);
 
 private:
-    QSignalMapper *m_windowMapper;
-    QMenu         *m_windowMenu;
-    QToolBar      *m_actionBar;
+    QSignalMapper *windowMapper;
+    QMenu         *windowMenu;
+    QToolBar      *actionBar;
 };
 
 #endif // LOGISTICMAINWINDOW_H

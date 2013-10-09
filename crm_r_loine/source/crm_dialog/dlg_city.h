@@ -1,37 +1,35 @@
-#ifndef CITYDIALOG_H
-#define CITYDIALOG_H
+#ifndef CCITYDIALOG_H
+#define CCITYDIALOG_H
+
+#include "source/crm_core/core_logisticnamespace.h"
 
 #include <QtGui/QDialog>
 
 namespace Ui {
-class CityDialog;
+class CCityDialog;
 }
 
-class CityDialog : public QDialog
+class CCityDialog : public QDialog
 {
     Q_OBJECT
     
 public:
-    explicit CityDialog(QWidget *parent = 0);
-    ~CityDialog();
+    explicit CCityDialog(QWidget *parent = 0);
+    virtual ~CCityDialog();
 
-private:
-    void updateActions();
-    bool enableSave;
+    void fillFormSelectedRecord(const QList<QString> &param, const Action &act);
 
 protected:
     void closeEvent(QCloseEvent *);
-    void showEvent(QShowEvent *);
 
 signals:
-    void saveDataChanged();
+    void saveDataChanged(const QList<QString> &param);
 
 private slots:
-    void slotCurrentChanged() { updateActions(); }
     void slotSaveDataChanged();
 
-public:
-    Ui::CityDialog *ui;
+private:
+    Ui::CCityDialog *ui;
 };
 
-#endif // CITYDIALOG_H
+#endif // CCITYDIALOG_H

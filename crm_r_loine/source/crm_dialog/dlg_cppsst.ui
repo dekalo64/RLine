@@ -43,7 +43,7 @@
   <layout class="QGridLayout" name="gridLayout_2">
    <item row="0" column="0">
     <layout class="QGridLayout" name="gLayoutDictionaryTemplate">
-     <item row="0" column="0">
+     <item row="0" column="0" alignment="Qt::AlignRight">
       <widget class="QLabel" name="labelItem">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
@@ -60,14 +60,21 @@
         </font>
        </property>
        <property name="text">
-        <string>Наименование</string>
+        <string>Наименование:</string>
        </property>
       </widget>
      </item>
      <item row="0" column="1">
-      <widget class="QLineEdit" name="lineEditName"/>
+      <widget class="QLineEdit" name="lineEditName">
+       <property name="font">
+        <font>
+         <family>Arial</family>
+         <pointsize>9</pointsize>
+        </font>
+       </property>
+      </widget>
      </item>
-     <item row="1" column="0">
+     <item row="1" column="0" alignment="Qt::AlignRight">
       <widget class="QLabel" name="labelIcon">
        <property name="font">
         <font>
@@ -78,12 +85,18 @@
         </font>
        </property>
        <property name="text">
-        <string>Уровень</string>
+        <string>Уровень:</string>
        </property>
       </widget>
      </item>
      <item row="1" column="1">
       <widget class="QComboBox" name="comboBoxIcon">
+       <property name="font">
+        <font>
+         <family>Arial</family>
+         <pointsize>9</pointsize>
+        </font>
+       </property>
        <property name="editable">
         <bool>true</bool>
        </property>
@@ -119,6 +132,21 @@
    <item row="2" column="0">
     <layout class="QHBoxLayout" name="hLayoutOkCancel">
      <item>
+      <widget class="QPushButton" name="buttonCancel">
+       <property name="font">
+        <font>
+         <family>Arial</family>
+         <pointsize>9</pointsize>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>Отмена</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="buttonSave">
        <property name="font">
         <font>
@@ -136,21 +164,6 @@
        </property>
        <property name="flat">
         <bool>false</bool>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="buttonCancel">
-       <property name="font">
-        <font>
-         <family>Arial</family>
-         <pointsize>9</pointsize>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="text">
-        <string>Отмена</string>
        </property>
       </widget>
      </item>

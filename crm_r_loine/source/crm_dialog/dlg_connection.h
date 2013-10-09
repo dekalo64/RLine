@@ -5,6 +5,8 @@
 
 #include "ui_dlg_connection.h"
 
+#include "source/crm_additionally/adl_communicate.h"
+
 #include <QtCore/QPropertyAnimation>
 #include <QtGui/QGraphicsOpacityEffect>
 #include <QtGui/QDialog>
@@ -22,8 +24,6 @@ private:
     QString userName() const;
     QString password() const;
 
-    void updateActions();
-
 Q_SIGNALS:
     void sendUserInformation(const QString &user, const QString &passwd);
     void setVisibleComponent(bool visible);
@@ -31,8 +31,6 @@ Q_SIGNALS:
 private Q_SLOTS:
     void slotExitApplication() { qApp->quit(); }
     void slotDataBaseConnect();
-
-    void currentChanged()      { updateActions(); }
     void slotSuccessConnection();
 
 private:

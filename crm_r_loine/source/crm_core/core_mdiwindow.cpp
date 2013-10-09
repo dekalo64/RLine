@@ -10,51 +10,67 @@ MdiWindow::MdiWindow(QWidget *parent) :
 
 void MdiWindow::closeEvent(QCloseEvent * /* *event */)
 {
-    if (LogisticApplication::instance()->positions != nullptr &&
-       (LogisticApplication::instance()->mainWnd->activeMdiWindow()->accessibleDescription() ==
-        LogisticApplication::instance()->positions->metaObject()->className())) {
-                delete LogisticApplication::instance()->positions;
-                LogisticApplication::instance()->positions = nullptr;
+    if (CLogisticApplication::instance()->position != nullptr &&
+       (CLogisticMainWindow::instance()->activeMdiWindow()->accessibleDescription() ==
+        CLogisticApplication::instance()->position->metaObject()->className())) {
+                delete CLogisticApplication::instance()->position;
+                CLogisticApplication::instance()->position = nullptr;
         return;
     }
 
-    if (LogisticApplication::instance()->contractortype != nullptr &&
-       (LogisticApplication::instance()->mainWnd->activeMdiWindow()->accessibleDescription() ==
-        LogisticApplication::instance()->contractortype->metaObject()->className())) {
-                delete LogisticApplication::instance()->contractortype;
-                LogisticApplication::instance()->contractortype = nullptr;
+    if (CLogisticApplication::instance()->contractortype != nullptr &&
+       (CLogisticMainWindow::instance()->activeMdiWindow()->accessibleDescription() ==
+        CLogisticApplication::instance()->contractortype->metaObject()->className())) {
+                delete CLogisticApplication::instance()->contractortype;
+                CLogisticApplication::instance()->contractortype = nullptr;
         return;
     }
 
-    if (LogisticApplication::instance()->tasktype &&
-       (LogisticApplication::instance()->mainWnd->activeMdiWindow()->accessibleDescription() ==
-        LogisticApplication::instance()->tasktype->metaObject()->className())) {
-                delete LogisticApplication::instance()->tasktype;
-                LogisticApplication::instance()->tasktype = nullptr;
+    if (CLogisticApplication::instance()->tasktype &&
+       (CLogisticMainWindow::instance()->activeMdiWindow()->accessibleDescription() ==
+        CLogisticApplication::instance()->tasktype->metaObject()->className())) {
+                delete CLogisticApplication::instance()->tasktype;
+                CLogisticApplication::instance()->tasktype = nullptr;
         return;
     }
 
-    if (LogisticApplication::instance()->priorities &&
-       (LogisticApplication::instance()->mainWnd->activeMdiWindow()->accessibleDescription() ==
-        LogisticApplication::instance()->priorities->metaObject()->className())) {
-                delete LogisticApplication::instance()->priorities;
-                LogisticApplication::instance()->priorities = nullptr;
+    if (CLogisticApplication::instance()->priority &&
+       (CLogisticMainWindow::instance()->activeMdiWindow()->accessibleDescription() ==
+        CLogisticApplication::instance()->priority->metaObject()->className())) {
+                delete CLogisticApplication::instance()->priority;
+                CLogisticApplication::instance()->priority = nullptr;
         return;
     }
 
-    if (LogisticApplication::instance()->status &&
-       (LogisticApplication::instance()->mainWnd->activeMdiWindow()->accessibleDescription() ==
-        LogisticApplication::instance()->status->metaObject()->className())) {
-                delete LogisticApplication::instance()->status;
-                LogisticApplication::instance()->status = nullptr;
+    if (CLogisticApplication::instance()->status &&
+       (CLogisticMainWindow::instance()->activeMdiWindow()->accessibleDescription() ==
+        CLogisticApplication::instance()->status->metaObject()->className())) {
+                delete CLogisticApplication::instance()->status;
+                CLogisticApplication::instance()->status = nullptr;
         return;
     }
 
-    if (LogisticApplication::instance()->countryandcity &&
-       (LogisticApplication::instance()->mainWnd->activeMdiWindow()->accessibleDescription() ==
-        LogisticApplication::instance()->countryandcity->metaObject()->className())) {
-                delete LogisticApplication::instance()->countryandcity;
-                LogisticApplication::instance()->countryandcity = nullptr;
+    if (CLogisticApplication::instance()->countrycity &&
+       (CLogisticMainWindow::instance()->activeMdiWindow()->accessibleDescription() ==
+        CLogisticApplication::instance()->countrycity->metaObject()->className())) {
+                delete CLogisticApplication::instance()->countrycity;
+                CLogisticApplication::instance()->countrycity = nullptr;
+        return;
+    }
+
+    if (CLogisticApplication::instance()->customer &&
+       (CLogisticMainWindow::instance()->activeMdiWindow()->accessibleDescription() ==
+        CLogisticApplication::instance()->customer->metaObject()->className())) {
+                delete CLogisticApplication::instance()->customer;
+                CLogisticApplication::instance()->customer = nullptr;
+        return;
+    }
+
+    if (CLogisticApplication::instance()->supplier &&
+       (CLogisticMainWindow::instance()->activeMdiWindow()->accessibleDescription() ==
+        CLogisticApplication::instance()->supplier->metaObject()->className())) {
+                delete CLogisticApplication::instance()->supplier;
+                CLogisticApplication::instance()->supplier = nullptr;
         return;
     }
 }

@@ -1,40 +1,44 @@
-#include "source/dialog/inventoriesdialog.h"
-#include "ui_inventoriesdialog.h"
-#include "source/core/dictionarycore.h"
+#include "ui_dlg_inventories.h"
+
+#include "source/crm_dialog/dlg_inventories.h"
+#include "source/crm_core/core_dictionarycore.h"
 
 InventoriesDialog::InventoriesDialog(QWidget *parent) :
     QDialog(parent)
   , ui(new Ui::InventoriesDialog)
+  , menu(new QMenu(this))
 {
     ui->setupUi(this);
     setWindowFlags(Qt::Drawer);
 
-    QPixmap pixmapAdd("data/picture/toolbar/new.png");
+    menu->addAction(new QAction(QObject::tr("Новый документ"), this));
+    menu->addAction(new QAction(QObject::tr("Открыть документ"), this));
+    menu->addAction(new QAction(QObject::tr("Удалить документ"), this));
 
-    ui->buttonAdd->setIcon(QIcon(pixmapAdd));
-    ui->buttonAdd->setCursor(Qt::PointingHandCursor);
+    QPixmap pixmapChoose("data/picture/additionally/choose.png");
 
-    QPixmap pixmapEdit("data/picture/toolbar/edit.png");
-
-    ui->buttonEdit->setIcon(QIcon(pixmapEdit));
-    ui->buttonEdit->setCursor(Qt::PointingHandCursor);
-
-    QPixmap pixmapDelete("data/picture/toolbar/delete.png");
-
-    ui->buttonDelete->setIcon(QIcon(pixmapDelete));
-    ui->buttonDelete->setCursor(Qt::PointingHandCursor);
-
-    ui->hLayoutControlButton->setAlignment(ui->buttonDelete, Qt::AlignLeft);
+    ui->buttonChoose->setIcon(QIcon(pixmapChoose));
+    ui->buttonChoose->setText("\t");
+    ui->buttonChoose->setStyleSheet("QToolButton {"
+                                                  "border: 1px solid #515151;"
+                                                  "border-radius: 2px;"
+                                                  "background-color: #68a44a;"
+                                    "}"
+                                    "QToolButton::menu-button {"
+                                                  "border: 1px solid #515151;"
+                                                  "border-top-right-radius: 2px;"
+                                                  "border-bottom-right-radius: 2px;"
+                                    "}"
+                                    " QToolButton::menu-arrow {"
+                                                  "image: url(data/picture/additionally/toolbutton-handle.png);"
+                                    "}");
+    ui->buttonChoose->setMenu(menu);
 
     listWidgetAccountingTransaction = new ListWidgetAccountingTransaction(this);
     ui->hLayoutAccountingTransaction->addWidget(listWidgetAccountingTransaction);
 
     connect(ui->buttonSave, SIGNAL(clicked()), this, SLOT(slotSaveDataChanged()));
     connect(ui->buttonCancel, SIGNAL(clicked()), this, SLOT(close()));
-    connect(ui->lineEditInventories, SIGNAL(textEdited(QString)), this, SLOT(slotCurrentChanged()));
-    connect(ui->checkBoxActual, SIGNAL(clicked()), this, SLOT(slotCurrentChanged()));
-
-    updateActions();
 }
 
 InventoriesDialog::~InventoriesDialog()
@@ -45,24 +49,12 @@ InventoriesDialog::~InventoriesDialog()
 
 void InventoriesDialog::closeEvent(QCloseEvent *)
 {
-    DictionaryCore::clearEditDialog(this);
+    CDictionaryCore::clearEditDialog(this);
 }
-
-void InventoriesDialog::showEvent(QShowEvent *)
-{
-    updateActions();
-}
-
 
 void InventoriesDialog::slotSaveDataChanged()
 {
     emit saveDataChanged();
-}
-
-void InventoriesDialog::updateActions()
-{
-    bool m_enableBtnConnect = (!ui->lineEditInventories->text().isEmpty());
-    ui->buttonSave->setEnabled(m_enableBtnConnect);
 }
 
 ListWidgetAccountingTransaction::ListWidgetAccountingTransaction(QWidget *parent) :

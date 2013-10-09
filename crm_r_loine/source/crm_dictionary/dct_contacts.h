@@ -11,13 +11,13 @@ namespace Ui {
 class Contacts;
 }
 
-class Contacts : public QWidget
+class CContacts : public QWidget
 {
     Q_OBJECT
     
 public:
-    explicit Contacts(QWidget *parent = 0);
-    ~Contacts();
+    explicit CContacts(QWidget *parent = 0);
+    ~CContacts();
     
 private:
     Ui::Contacts   *ui;

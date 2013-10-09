@@ -6,6 +6,9 @@
 #include "source/crm_core/core_dictionarycore.h"
 #include "source/crm_core/core_logisticnamespace.h"
 #include "source/crm_dialog/dlg_additem.h"
+#include "source/crm_dialog/dlg_customer.h"
+#include "source/crm_dialog/dlg_discount.h"
+#include "source/crm_dialog/dlg_customer_g.h"
 
 #include <QtCore/QModelIndex>
 #include <QtCore/QDateTime>
@@ -37,6 +40,11 @@ class CCustomer;
 
 class CCustomerTreeView;
 
+typedef struct {
+    int idCustomer;
+    QString nameCustomer;
+} MoveCustomer;
+
 class CCustomer : public QWidget, public CDictionaryCore
 {
     Q_OBJECT
@@ -48,7 +56,7 @@ public:
     bool actualRecords;
 
 protected:
-  //  bool eventFilter(QObject *object, QEvent *event);
+    bool eventFilter(QObject *object, QEvent *event);
 
 private:
     QStandardItemModel    *modelFaces;
@@ -60,25 +68,49 @@ private:
 
     void fillFacesModel  (const QModelIndex &index, QSqlQuery &stored);
     void fillPartnerModel(QSqlQuery &stored);
-    void columnHidden    (const QVector<int> &vector);
+    void columnHidden    (QTreeView *view, QStandardItemModel *model, const QVector<int> &vector);
+    bool fillFormSelectedRecord (void);
 
 private slots:
     void slotFillGroup  (const QModelIndex &index);
     void slotFillPartner(const QModelIndex &index);
+//    void slotFillHuman  (const QModelIndex &index);
     void slotClearGroup (const QModelIndex &index);
+
+//    void slotActualRecords (const bool &actual);
+//    void slotFindCities             (const QString &text);
+    void slotCutRecords             (void);
+    void slotCopyRecords            (void);
+    void slotPasteRecords           (void);
+    void slotDeleteRecords          (void);
+//    void slotRefreshRecords         (void);
+//    void slotRefreshRecordsCountry  (void);
+//    void slotRefreshRecordsCity     (void);
+    void slotCreateEditDialog       (const QString &action);
+    void slotShowEditDialog         (void);
+    void slotInsertOrUpdateRecords  (void);
 
 private:
     Ui::CCustomer     *ui;
 
     QStandardItem     *root;
 
-    QTreeView         *treeViewFaces;
-    CCustomerTreeView *treeViewPartner;
+    QTreeView         *treeFaces;
+    CCustomerTreeView *treePartner;
     QTextEdit         *textEditPartnerComment;
-    CCustomerTreeView *treeViewHuman;
+    CCustomerTreeView *treeHuman;
     QTextEdit         *textEditHumanComment;
 
+    CCustomerDialog   *customerDialog;
+    CCustomer_gDialog *customer_gDialog;
+    CDiscountDialog   *discountDialog;
+    CAddItem          *addItem;
+
     CFilter           *filter;
+    QWidget           *focusedWidget;
+
+    Action             act;
+    MoveCustomer       mc;
 };
 
 class CCustomerTreeView : public QTreeView

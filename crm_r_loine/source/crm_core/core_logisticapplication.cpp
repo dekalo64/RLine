@@ -1,27 +1,25 @@
-#include "ui_dlg_connection.h"
-
 #include "source/crm_core/core_logisticapplication.h"
 #include "source/crm_core/core_logisticmainwindow.h"
 
-LogisticMainWindow *LogisticApplication::mainWnd          = nullptr;
-QSettings          *LogisticApplication::settings         = nullptr;
-ConnectionDialog   *LogisticApplication::cntnDialog       = nullptr;
+//CLogisticMainWindow *CLogisticApplication::mainWnd      = nullptr;
 
-Positions      *LogisticApplication::positions            = nullptr;
-TaskType       *LogisticApplication::tasktype             = nullptr;
-ContractorType *LogisticApplication::contractortype       = nullptr;
-Status         *LogisticApplication::status               = nullptr;
-Priorities     *LogisticApplication::priorities           = nullptr;
-CCountryCity *LogisticApplication::countryandcity       = nullptr;
-Suppliers      *LogisticApplication::suppliers            = nullptr;
-CCustomer      *LogisticApplication::customer             = nullptr;
-//AccountingOperation     *LogisticApplication::accountingoperation           = nullptr;
+QSettings           *CLogisticApplication::settings     = nullptr;
+ConnectionDialog    *CLogisticApplication::cntnDialog   = nullptr;
 
-LogisticApplication::LogisticApplication(int &argc, char **argv)
+CPositions      *CLogisticApplication::position        = nullptr;
+CTaskType       *CLogisticApplication::tasktype         = nullptr;
+CContractorType *CLogisticApplication::contractortype   = nullptr;
+CStatus         *CLogisticApplication::status           = nullptr;
+CPriorities     *CLogisticApplication::priority       = nullptr;
+CCountryCity    *CLogisticApplication::countrycity      = nullptr;
+CSuppliers      *CLogisticApplication::supplier        = nullptr;
+CCustomer       *CLogisticApplication::customer         = nullptr;
+
+CLogisticApplication::CLogisticApplication(int &argc, char **argv)
     :QApplication(argc, argv)
 {
-    QTextCodec::setCodecForLocale(QTextCodec::codecForName("utf-8"));
-    QTextCodec::setCodecForTr(QTextCodec::codecForName("utf-8"));
+    QTextCodec::setCodecForLocale  (QTextCodec::codecForName("utf-8"));
+    QTextCodec::setCodecForTr      (QTextCodec::codecForName("utf-8"));
     QTextCodec::setCodecForCStrings(QTextCodec::codecForName("utf-8"));
 
     QApplication::setQuitOnLastWindowClosed(true);
@@ -30,166 +28,162 @@ LogisticApplication::LogisticApplication(int &argc, char **argv)
     settings->setIniCodec(QTextCodec::codecForName("utf-8"));
 }
 
-LogisticApplication::~LogisticApplication()
+CLogisticApplication::~CLogisticApplication()
 {
     if (database.isOpen()) { database.close(); }
 
-    if (IS_VALID_PTR(positions))        {                        positions         = nullptr; }
-    if (IS_VALID_PTR(tasktype))         {                        tasktype          = nullptr; }
-    if (IS_VALID_PTR(contractortype))   {                        contractortype    = nullptr; }
-    if (IS_VALID_PTR(status))           {                        status            = nullptr; }
-    if (IS_VALID_PTR(priorities))       {                        priorities        = nullptr; }
-    if (IS_VALID_PTR(countryandcity))   {                        countryandcity    = nullptr; }
-    if (IS_VALID_PTR(suppliers))        {                        suppliers         = nullptr; }
-    if (IS_VALID_PTR(customer))         {                        customer          = nullptr; }
-//    if (IS_VALID_PTR(accountingoperation))       {                        accountingoperation        = nullptr; }
+    if (IS_VALID_PTR(position))        {  position       = nullptr; }
+    if (IS_VALID_PTR(tasktype))        {  tasktype       = nullptr; }
+    if (IS_VALID_PTR(contractortype))  {  contractortype = nullptr; }
+    if (IS_VALID_PTR(status))          {  status         = nullptr; }
+    if (IS_VALID_PTR(priority))        {  priority       = nullptr; }
+    if (IS_VALID_PTR(countrycity))     {  countrycity    = nullptr; }
+    if (IS_VALID_PTR(supplier))        {  supplier       = nullptr; }
+    if (IS_VALID_PTR(customer))        {  customer       = nullptr; }
 
-    if (IS_VALID_PTR(cntnDialog)) {                              cntnDialog        = nullptr; }
-    if (IS_VALID_PTR(settings))         { delete settings;       settings          = nullptr; }
-    if (IS_VALID_PTR(mainWnd))          {                        mainWnd           = nullptr; }
+    if (IS_VALID_PTR(cntnDialog))      {  cntnDialog     = nullptr; }
+
+    if (IS_VALID_PTR(settings))        {  delete settings; settings = nullptr; }
 }
 
-LogisticApplication *LogisticApplication::instance()
+CLogisticApplication *CLogisticApplication::instance()
 {
-    return (static_cast<LogisticApplication *>(QCoreApplication::instance()));
+    return (static_cast<CLogisticApplication *>(QCoreApplication::instance()));
 }
 
-ConnectionDialog *LogisticApplication::connectionDialog(QWidget *parent)
+ConnectionDialog *CLogisticApplication::connectionDialog(QWidget *parent)
 {
     if (!cntnDialog){
-        cntnDialog = new ConnectionDialog(parent);
+         cntnDialog = new ConnectionDialog(parent);
     }
+
     if (cntnDialog){
-        connect(cntnDialog, SIGNAL(sendUserInformation(QString,QString)),
-                LogisticApplication::instance(), SLOT(slotAddConnection(QString,QString)));
-        connect(LogisticApplication::instance(), SIGNAL(successConnection()),
-                cntnDialog, SLOT(slotSuccessConnection()));
-        connect(cntnDialog, SIGNAL(setVisibleComponent(bool)),
-                LogisticApplication::instance(), SLOT(slotVisibleComponent(bool)));
+        connect(cntnDialog, SIGNAL(sendUserInformation(QString,QString)), CLogisticApplication::instance(), SLOT(slotAddConnection(QString,QString)));
+        connect(CLogisticApplication::instance(), SIGNAL(successConnection()), cntnDialog, SLOT(slotSuccessConnection()));
+        connect(cntnDialog, SIGNAL(setVisibleComponent(bool)), CLogisticApplication::instance(), SLOT(slotVisibleComponent(bool)));
     }
     setStyleWidget(cntnDialog, "connection.qss");
+
     return cntnDialog;
 }
 
-Positions *LogisticApplication::createPosition()
+CPositions *CLogisticApplication::createPosition()
 {
-    if (positions)
-        positions = nullptr;
+    position == nullptr ? position = new CPositions() : position = nullptr;
 
-    if (positions == nullptr){
-        positions = new Positions();
+    if (!position){
+         position = new CPositions();
+         position->setObjectName ("Position");
     }
-    return positions;
+
+    return position;
 }
 
-TaskType *LogisticApplication::createTaskType()
+CTaskType *CLogisticApplication::createTaskType()
 {
-    if (tasktype)
-        tasktype = nullptr;
+    tasktype == nullptr ? tasktype = new CTaskType() : tasktype = nullptr;
 
-    if (tasktype == nullptr){
-        tasktype = new TaskType();
+    if (!tasktype){
+         tasktype = new CTaskType();
+         tasktype->setObjectName ("TaskType");
     }
+
     return tasktype;
 }
 
-ContractorType *LogisticApplication::createContractorType()
+CContractorType *CLogisticApplication::createContractorType()
 {
-    if (contractortype)
-        contractortype = nullptr;
+    contractortype == nullptr ? contractortype = new CContractorType() : contractortype = nullptr;
 
-    if (contractortype == nullptr){
-        contractortype = new ContractorType();
+    if (!contractortype){
+         contractortype = new CContractorType();
+         contractortype->setObjectName ("Contractor");
     }
+
     return contractortype;
 }
 
-Status *LogisticApplication::createStatus()
+CStatus *CLogisticApplication::createStatus()
 {
-    if (status)
-        status = nullptr;
+    status == nullptr ? status = new CStatus() : status = nullptr;
 
-    if (status == nullptr){
-        status = new Status();
+    if (!status){
+         status = new CStatus();
+         status->setObjectName ("Status");
     }
+
     return status;
 }
 
-Priorities *LogisticApplication::createPriorities()
+CPriorities *CLogisticApplication::createPriorities()
 {
-    if (priorities)
-        priorities = nullptr;
+    priority == nullptr ? priority = new CPriorities() : priority = nullptr;
 
-    if (priorities == nullptr){
-        priorities = new Priorities();
+    if (!priority){
+         priority = new CPriorities();
+         priority->setObjectName ("Priority");
     }
-    return priorities;
+
+    return priority;
 }
 
-CCountryCity *LogisticApplication::createCountryAndCity()
+CCountryCity *CLogisticApplication::createCountryCity()
 {
-    if (countryandcity)
-        countryandcity = nullptr;
+    countrycity == nullptr ? countrycity = new CCountryCity() : countrycity = nullptr;
 
-    if (countryandcity == nullptr){
-        countryandcity = new CCountryCity();
+    if (!countrycity){
+         countrycity = new CCountryCity();
+         countrycity->setObjectName ("CountryCity");
     }
-    return countryandcity;
+
+    return countrycity;
 }
 
-Contacts *LogisticApplication::createContacts()
+// WARNING
+CContacts *CLogisticApplication::createContacts()
 {
-    Contacts *contacts = new Contacts;
+    CContacts *contacts = new CContacts;
     if (!contacts){
         return nullptr;
     }
     return contacts;
 }
 
-Suppliers *LogisticApplication::createSappliers()
+CSuppliers *CLogisticApplication::createSappliers()
 {
-    if (suppliers)
-        suppliers = nullptr;
+    supplier == nullptr ? supplier = new CSuppliers() : supplier = nullptr;
 
-    if (suppliers == nullptr){
-        suppliers = new Suppliers();
+    if (!supplier){
+         supplier = new CSuppliers();
+         supplier->setObjectName ("Supplier");
     }
-    return suppliers;
+
+    return supplier;
 }
 
-CCustomer *LogisticApplication::createCustomer()
+CCustomer *CLogisticApplication::createCustomer()
 {
-    if (customer)
-        customer = nullptr;
+    customer == nullptr ? customer = new CCustomer() : customer = nullptr;
 
-    if (customer == nullptr){
-        customer = new CCustomer();
+    if (!customer){
+         customer = new CCustomer();
+         customer->setObjectName ("Customer");
     }
+
     return customer;
 }
 
-//AccountingOperation *LogisticApplication::createAccountingOperation()
-//{
-//    if (accountingoperation)
-//        accountingoperation = nullptr;
-
-//    if (accountingoperation == nullptr){
-//        accountingoperation = new AccountingOperation();
-//    }
-//    return accountingoperation;
-//}
-
-MdiWindow *LogisticApplication::createMdiMindow(const QString &title, const QIcon &icon)
+MdiWindow *CLogisticApplication::createMdiMindow(const QString &title, const QIcon &icon)
 {
-    MdiWindow *m_mdiWindow = new MdiWindow();
-               m_mdiWindow->setWindowTitle(title);
-               m_mdiWindow->setWindowIcon(icon);
-    mainWnd->m_mdiArea->addSubWindow(m_mdiWindow /* Qt::FramelessWindowHint */);
+    MdiWindow *mdiWindow = new MdiWindow();
+               mdiWindow->setWindowTitle(title);
+               mdiWindow->setWindowIcon (icon);
+    CLogisticMainWindow::instance()->mdiArea->addSubWindow(mdiWindow /* Qt::FramelessWindowHint */);
 
-    return m_mdiWindow;
+    return mdiWindow;
 }
 
-QSqlError LogisticApplication::slotAddConnection(const QString &user, const QString &passwd)
+QSqlError CLogisticApplication::slotAddConnection(const QString &user, const QString &passwd)
 {   
     QString templateString = QString("DRIVER={SQL Server};Server=%1;Database=%2;Uid=%3;Pwd=%4;");
     QString connectionString = QString(templateString).arg(host()).arg(dbname()).arg(user).arg(passwd);
@@ -204,7 +198,7 @@ QSqlError LogisticApplication::slotAddConnection(const QString &user, const QStr
 #ifndef QT_NO_CURSOR
     QApplication::restoreOverrideCursor();
 #endif
-        QMessageBox::critical(0, "Ошибка", "Ошибка подключения к базе данных");
+        CCommunicate::showing("Неправильно указан логин и/или пароль");
         return database.lastError();
     } else {
         emit successConnection();
@@ -215,46 +209,27 @@ QSqlError LogisticApplication::slotAddConnection(const QString &user, const QStr
     return database.lastError();
 }
 
-void LogisticApplication::slotVisibleComponent(bool visible)
+void CLogisticApplication::slotVisibleComponent(bool visible)
 {
-    setStyleWidget(mainWnd, "application.qss");
+    setStyleWidget(CLogisticMainWindow::instance(), "application.qss");
 
-    mainWnd->setupToolBar   (visible);
-    mainWnd->setupStatusBar (visible);
-    mainWnd->setupMenu      (visible);
-    mainWnd->setupDockWindow(visible);
+    CLogisticMainWindow::instance()->setupToolBar   (visible);
+    CLogisticMainWindow::instance()->setupStatusBar (visible);
+    CLogisticMainWindow::instance()->setupMenu      (visible);
+    CLogisticMainWindow::instance()->setupDockWindow(visible);
 }
 
-void LogisticApplication::setStyleWidget(QWidget *widget, const QString &cssFile)
+void CLogisticApplication::setStyleWidget(QWidget *widget, const QString &cssFile)
 {
-    QFile m_styleFile(QString(qApp->applicationDirPath() + "/data/qss/%1").arg(cssFile));
-    if (m_styleFile.exists()){
-        if (m_styleFile.open(QFile::ReadOnly)) {
-            QString m_styleSheet = QLatin1String(m_styleFile.readAll());
-            widget->setStyleSheet(m_styleSheet);
-        }
+    QFile styleFile(QString(qApp->applicationDirPath() + "/data/qss/%1").arg(cssFile));
+    if (styleFile.exists()){
+       try{
+            if (styleFile.open(QFile::ReadOnly)) {
+                QString styleSheet = QLatin1String(styleFile.readAll());
+                widget->setStyleSheet(styleSheet);
+            }
+       } catch (std::exception const &e){
+            CCommunicate::showing(QString("%1").arg(e.what()));
+       }
     }
-}
-
-QString LogisticApplication::driver() const
-{
-    return settings->value("database/driver").toString();
-}
-
-QString LogisticApplication::host() const
-{
-    return settings->value("database/host").toString();
-}
-
-QString LogisticApplication::dbname() const
-{
-    return settings->value("database/dbname").toString();
-}
-
-LogisticMainWindow *LogisticApplication::mainWindow()
-{
-    if (mainWnd == nullptr){
-         mainWnd = new LogisticMainWindow();
-    }
-    return mainWnd;
 }

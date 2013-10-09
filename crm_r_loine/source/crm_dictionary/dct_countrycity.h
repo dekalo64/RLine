@@ -3,14 +3,11 @@
 #ifndef COUNTRYCITY_H
 #define COUNTRYCITY_H
 
-#include "ui_dlg_city.h"
-#include "ui_dlg_country.h"
-
 #include "source/crm_core/core_dictionarycore.h"
 #include "source/crm_core/core_logisticnamespace.h"
+
 #include "source/crm_dialog/dlg_city.h"
 #include "source/crm_dialog/dlg_country.h"
-#include "source/crm_dialog/dlg_additem.h"
 
 #include <QtCore/QModelIndex>
 #include <QtCore/QDateTime>
@@ -37,25 +34,27 @@ namespace Ui {
 class CCountryCity;
 }
 
+class CCountryTreeView;
 class CCityTreeView;
 
 typedef struct {
-    int idCity;
-    int idCountry;
+    int codeCity;
+    int codeCountry;
     QString nameCity;
     QString nameCountry;
-} MoveItem;
+} MoveCity;
 
 class CCountryCity : public QWidget, public CDictionaryCore
 {
     Q_OBJECT
-    Q_ENUMS(RecordActionDatabase::Enum)
 
 public:
     explicit CCountryCity(QWidget *parent = 0);
     virtual ~CCountryCity();
 
     bool actualRecords;
+
+    QMenu *getContextMenu(void) const;
 
 protected:
     bool eventFilter(QObject *object, QEvent *event);
@@ -68,8 +67,7 @@ private:
 
     void fillCountryModel (QSqlQuery &stored, const QModelIndex &index);
     void fillCityModel (QSqlQuery &stored);
-    void columnHidden  (QTreeView *view, QStandardItemModel *model, const QVector<int> &vector);
-    bool fillFormSelectedRecord (void);
+    bool fillListSelectedRecord(QList<QString> &param);
 
 private slots:
     void slotFillGroup  (const QModelIndex &index);
@@ -85,26 +83,44 @@ private slots:
     void slotRefreshRecords         (void);
     void slotRefreshRecordsCountry  (void);
     void slotRefreshRecordsCity     (void);
-    void slotCreateEditDialog       (const int &r);
-    void slotInsertOrUpdateRecords  (void);
+    void slotCreateEditDialog       (const QString &action);
+    void slotCreateEditDialog       (void);
+    void slotInsertOrUpdateRecords  (const QList<QString> &param);
 
 private:
     Ui::CCountryCity *ui;
 
     QStandardItem    *root;
 
-    QTreeView        *treeViewCountry;
-    CCityTreeView    *treeViewCity;
+    CCountryTreeView *treeCountry;
+    CCityTreeView    *treeCity;
     CFilter          *filter;
 
-    CityDialog       *cityDialog;
-    CountryDialog    *countryDialog;
+    CCountryDialog   *countryDialog;
+    CCityDialog      *cityDialog;
+
 
     QWidget          *focusedWidget;
-    AddItem          *addItem;
 
-    RecordActionDatabase::Enum rad;
-    MoveItem                   mc;
+    Action            act;
+    MoveCity          mc;
+};
+
+class CCountryTreeView : public QTreeView
+{
+    Q_OBJECT
+
+public:
+    explicit CCountryTreeView(QWidget *parent = 0);
+    virtual ~CCountryTreeView();
+
+private slots:
+    void slotCustomContextMenuRequested(const QPoint &pos);
+
+private:
+    friend QMenu *CCountryCity::getContextMenu(void) const;
+
+    QMenu  *menu;
 };
 
 class CCityTreeView : public QTreeView
@@ -113,6 +129,10 @@ class CCityTreeView : public QTreeView
 
 public:
     explicit CCityTreeView (QWidget *parent = 0);
+    virtual ~CCityTreeView();
+
+private slots:
+    void slotCustomContextMenuRequested(const QPoint &pos);
 
 protected:
     void mousePressEvent(QMouseEvent *event);
@@ -122,8 +142,11 @@ protected:
     void dropEvent(QDropEvent *event);
 
 private:
+    friend QMenu *CCountryCity::getContextMenu(void) const;
     void   draging();
+
     QPoint startPosition;
+    QMenu  *menu;
 };
 
 #endif // COUNTRYCITY_H

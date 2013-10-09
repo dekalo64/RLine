@@ -18,22 +18,19 @@ public:
     explicit CCppsstDialog(QWidget *parent = 0);
     virtual ~CCppsstDialog();
 
+    void fillFormSelectedRecord(const QList<QString> &param, const Action &act);
+
 protected:
     void closeEvent(QCloseEvent *);
-    void showEvent(QShowEvent *);
 
 signals:
-    void saveDataChanged();
+    void saveDataChanged(const QList<QString> &param);
 
 private slots:
-    void slotCurrentChanged() { updateActions(); }
     void slotSaveDataChanged();
-    
-private:
-    void updateActions();
-    bool enableSave;
+    void slotEnabledComboBox(const bool &enabled);
 
-public:
+private:
     Ui::CCppsstDialog *ui;
 };
 

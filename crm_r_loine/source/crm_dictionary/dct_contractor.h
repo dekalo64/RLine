@@ -16,31 +16,35 @@
 
 #define  CONTRACTOR_MODEL_COLUMN_COUNT 3
 
-class ContractorType: public CCppsst
+class CContractorType: public CCppsst
 {
     Q_OBJECT
 
 public:
-    explicit ContractorType(QWidget *parent = 0);
-    virtual ~ContractorType();
+    explicit CContractorType(QWidget *parent = 0);
+    virtual ~CContractorType();
 
     bool actualRecords;
+
+protected:
+    bool eventFilter(QObject *object, QEvent *event);
 
 private:
     QStandardItemModel    *modelContractor;
     QItemSelectionModel   *modelSelectionContractor;
 
     void fillContractorModel(QSqlQuery &stored);
-    bool fillFormSelectedRecord (void);
+    bool fillListSelectedRecord (QList<QString> &param);
 
 private slots:  
     void slotFillContractor       (void);
 
-    void slotCreateEditDialog(const int &r);
+    void slotCreateEditDialog(const QString &action);
+    void slotCreateEditDialog(void);
 
     void slotActualRecords (const bool &actual);
     void slotFindContractor(const QString &text);
-    void slotInsertOrUpdateRecords (void);
+    void slotInsertOrUpdateRecords (const QList<QString> &param);
     void slotCopyRecords           (void);
     void slotDeleteRecords         (void);
     void slotRefreshRecords        (void);

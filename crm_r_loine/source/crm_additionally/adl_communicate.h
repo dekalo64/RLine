@@ -20,8 +20,8 @@ public:
     static void     hiding();
 
 private:
-    explicit CCommunicate(const QString &text);
-    virtual  ~CCommunicate();
+    explicit CCommunicate(const QString &message);
+    virtual  ~CCommunicate(); 
     void window();
     void centerOnApplication();
 };

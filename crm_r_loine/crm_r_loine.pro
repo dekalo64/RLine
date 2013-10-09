@@ -3,12 +3,14 @@ QT += sql core gui
 TARGET   = crm
 TEMPLATE = app
 
+CONFIG += exceptions
+
 QMAKE_CXXFLAGS += -std=c++0x
 
 HEADERS += \
-#    source/crm_dialog/refgrpdialog.h \
-#    source/crm_dialog/inventoriesdialog.h \
-#    source/crm_additionally/accountingoperation.h
+#    source/crm_dialog/dlg_refgrp.h \
+#    source/crm_dialog/dlg_inventories.h \
+#    source/crm_additionally/adl_accountingoperation.h \
     source/crm_additionally/adl_communicate.h \
     source/crm_core/core_logisticapplication.h \
     source/crm_core/core_logisticmainwindow.h \
@@ -22,6 +24,11 @@ HEADERS += \
     source/crm_dialog/dlg_contacts.h \
     source/crm_dialog/dlg_country.h \
     source/crm_dialog/dlg_cppsst.h \
+    source/crm_dialog/dlg_customer.h \
+    source/crm_dialog/dlg_supplier.h \
+    source/crm_dialog/dlg_discount.h \
+    source/crm_dialog/dlg_customer_g.h \
+    source/crm_dialog/dlg_supplier_g.h \
     source/crm_dictionary/dct_contacts.h \
     source/crm_dictionary/dct_contractor.h \
     source/crm_dictionary/dct_countrycity.h \
@@ -33,9 +40,9 @@ HEADERS += \
     source/crm_dictionary/dct_task.h
 
 SOURCES += \
-#    source/crm_dialog/refgrpdialog.cpp \
-#    source/crm_dialog/inventoriesdialog.cpp \
-#    source/crm_additionally/accountingoperation.cpp
+#    source/crm_dialog/dlg_refgrp.cpp \
+#    source/crm_dialog/dlg_inventories.cpp \
+#    source/crm_additionally/adl_accountingoperation.cpp \
     source/crm_additionally/adl_communicate.cpp \
     source/crm_core/core_logisticapplication.cpp \
     source/crm_core/core_logisticmainwindow.cpp \
@@ -46,6 +53,11 @@ SOURCES += \
     source/crm_dialog/dlg_contacts.cpp \
     source/crm_dialog/dlg_country.cpp \
     source/crm_dialog/dlg_additem.cpp \
+    source/crm_dialog/dlg_customer.cpp \
+    source/crm_dialog/dlg_supplier.cpp \
+    source/crm_dialog/dlg_discount.cpp \
+    source/crm_dialog/dlg_customer_g.cpp \
+    source/crm_dialog/dlg_supplier_g.cpp \
     source/crm_dictionary/dct_contacts.cpp \
     source/crm_dictionary/dct_countrycity.cpp \
     source/crm_dictionary/dct_contractor.cpp \
@@ -70,9 +82,14 @@ FORMS += \
     source/crm_dialog/dlg_additem.ui \
     source/crm_dialog/dlg_country.ui \
     source/crm_dialog/dlg_contacts.ui \
-    source/crm_dialog/dlg_cppsst.ui
-#    source/crm_dialog/refgrpdialog.ui \
-#    source/crm_dialog/inventoriesdialog.ui \
-#    source/crm_additionally/accountingoperation.ui
+    source/crm_dialog/dlg_cppsst.ui \
+    source/crm_dialog/dlg_customer.ui \
+    source/crm_dialog/dlg_supplier.ui \
+    source/crm_dialog/dlg_discount.ui \
+    source/crm_dialog/dlg_customer_g.ui \
+    source/crm_dialog/dlg_supplier_g.ui \
+#    source/crm_dialog/dlg_refgrp.ui \
+#    source/crm_dialog/dlg_inventories.ui \
+#    source/crm_additionally/adl_accountingoperation.ui
 
 

@@ -19,7 +19,8 @@ QDialog > QLineEdit {
 
 QDialog > QLineEdit:focus {
      border: 1px solid;
-     border-color: #EE7621;
+     border-color: #ff7f1c;
+     background-color: #FFFACD;
 }
 
 QDialog > QPushButton {

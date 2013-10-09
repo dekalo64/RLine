@@ -3,49 +3,55 @@
 #include "source/crm_dialog/dlg_country.h"
 #include "source/crm_core/core_dictionarycore.h"
 
-CountryDialog::CountryDialog(QWidget *parent) :
+CCountryDialog::CCountryDialog(QWidget *parent) :
     QDialog(parent)
-  , enableSave(false)
-  , ui(new Ui::CountryDialog)
+  , ui(new Ui::CCountryDialog)
 {
-    setWindowFlags(Qt::Drawer);
     ui->setupUi(this);
+    setWindowFlags(Qt::Drawer);
+
+    setModal(true);
 
     connect(ui->buttonSave, SIGNAL(clicked()), this, SLOT(slotSaveDataChanged()));
     connect(ui->buttonCancel, SIGNAL(clicked()), this, SLOT(close()));
-    connect(ui->lineEditName, SIGNAL(textEdited(QString)), this, SLOT(slotCurrentChanged()));
-    connect(ui->lineEditNameEng, SIGNAL(textEdited(QString)), this, SLOT(slotCurrentChanged()));
-    connect(ui->lineEditCityCode, SIGNAL(textEdited(QString)), this, SLOT(slotCurrentChanged()));
-    connect(ui->checkBoxActual, SIGNAL(clicked()), this, SLOT(slotCurrentChanged()));
-
-    updateActions();
 }
 
-CountryDialog::~CountryDialog()
+CCountryDialog::~CCountryDialog()
 {
     delete ui;
 }
 
-void CountryDialog::closeEvent(QCloseEvent *)
+void CCountryDialog::fillFormSelectedRecord(const QList<QString> &param, const Action &act)
 {
+    if (act == Action::Add){
+        ui->labelUserD->setText(param.at(0));
+        ui->labelDateD->setText(param.at(1));
+    } else if (act == Action::Edit){
+        setWindowTitle(windowTitle() + QString(" - [%1]").arg(param.at(0)));
+
+        ui->lineEditName->setText      (param.at(0));
+        ui->lineEditNameEng->setText   (param.at(1));
+        ui->lineEditCityCode->setText  (param.at(2));
+        ui->checkBoxActual->setChecked (QVariant(param.at(3)).toBool());
+        ui->labelUserD->setText        (param.at(4));
+        ui->labelDateD->setText        (param.at(5));
+    }
+}
+
+void CCountryDialog::closeEvent(QCloseEvent *)
+{
+    setWindowTitle("Страна");
     CDictionaryCore::clearEditDialog(this);
-    enableSave = false;
 }
 
-void CountryDialog::showEvent(QShowEvent *)
+void CCountryDialog::slotSaveDataChanged()
 {
-    updateActions();
-}
+    QList<QString> param;
 
-void CountryDialog::slotSaveDataChanged()
-{
-    emit saveDataChanged();
-}
+    param.append(ui->lineEditName->text());
+    param.append(ui->lineEditNameEng->text());
+    param.append(ui->lineEditCityCode->text());
+    param.append(QString("%1").arg(ui->checkBoxActual->isChecked()));
 
-void CountryDialog::updateActions()
-{
-    ui->buttonSave->setEnabled(enableSave);
-    enableSave = (!ui->lineEditName->text().isEmpty() && !ui->lineEditNameEng->text().isEmpty() &&
-                  !ui->lineEditCityCode->text().isEmpty());
+    emit saveDataChanged(param);
 }
-

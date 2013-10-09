@@ -3,6 +3,8 @@
 #ifndef LOGISTICAPPLICATION_H
 #define LOGISTICAPPLICATION_H
 
+#include "source/crm_additionally/adl_communicate.h"
+
 #include "source/crm_core/core_mdiwindow.h"
 #include "source/crm_dialog/dlg_connection.h"
 #include "source/crm_dictionary/dct_positions.h"
@@ -14,7 +16,6 @@
 #include "source/crm_dictionary/dct_contacts.h"
 #include "source/crm_dictionary/dct_suppliers.h"
 #include "source/crm_dictionary/dct_customer.h"
-#include "source/crm_additionally/accountingoperation.h"
 
 #include <QtCore/QSettings>
 #include <QtCore/QFile>
@@ -29,54 +30,56 @@
 #define IS_VALID_PTR(ptr) ((ptr != (void*)0))
 
 QT_BEGIN_NAMESPACE
-class LogisticMainWindow;
+class CLogisticMainWindow;
 class MdiWindow;
 QT_END_NAMESPACE
 
 QT_FORWARD_DECLARE_CLASS(ConnectionDialog)
 
-class LogisticApplication: public QApplication
+class CLogisticApplication: public QApplication
 {
     Q_OBJECT
 
 public:
-    explicit LogisticApplication(int &argc, char **argv);
-    virtual ~LogisticApplication();
+    explicit CLogisticApplication(int &argc, char **argv);
+    virtual ~CLogisticApplication();
 
-    static LogisticApplication  *instance();
-    static MdiWindow            *createMdiMindow(const QString &title, const QIcon &icon);
-    static ConnectionDialog     *connectionDialog(QWidget *parent);
+// singleton
+    static CLogisticApplication *instance();
 
-    static Positions            *createPosition();
-    static TaskType             *createTaskType();
-    static ContractorType       *createContractorType();
-    static Status               *createStatus();
-    static Priorities           *createPriorities();
-    static CCountryCity       *createCountryAndCity();
-    static Contacts             *createContacts();
-    static Suppliers            *createSappliers();
-    static CCustomer            *createCustomer();
-//    static AccountingOperation  *createAccountingOperation();
+    MdiWindow            *createMdiMindow(const QString &title, const QIcon &icon);
+    ConnectionDialog     *connectionDialog(QWidget *parent = 0);
 
-    LogisticMainWindow          *mainWindow();
+    CPositions           *createPosition();
+    CTaskType            *createTaskType();
+    CContractorType      *createContractorType();
+    CStatus              *createStatus();
+    CPriorities          *createPriorities();
+    CCountryCity         *createCountryCity();
+    CContacts            *createContacts();
+    CSuppliers           *createSappliers();
+    CCustomer            *createCustomer();
 
-    inline QString driver() const;
-    inline QString host()   const;
-    QString dbname()        const;
+    inline QString driver() const{
+            return settings->value("database/driver").toString();
+    }
+    inline QString host()   const{
+            return settings->value("database/host").toString();
+    }
+    inline QString dbname() const{
+            return settings->value("database/dbname").toString();
+    }
 
     QSqlDatabase database;
 
-    static Positions      *positions;
-    static TaskType       *tasktype;
-    static ContractorType *contractortype;
-    static Status         *status;
-    static Priorities     *priorities;
-    static CCountryCity *countryandcity;
-    static Suppliers      *suppliers;
-    static CCustomer      *customer;
-//    static AccountingOperation *accountingoperation;
-
-    static LogisticMainWindow *mainWnd;
+    static CPositions      *position;
+    static CTaskType       *tasktype;
+    static CContractorType *contractortype;
+    static CStatus         *status;
+    static CPriorities     *priority;
+    static CCountryCity    *countrycity;
+    static CSuppliers      *supplier;
+    static CCustomer       *customer;
 
 Q_SIGNALS:
     void successConnection();
@@ -89,7 +92,7 @@ private:
     static QSettings          *settings;
     static ConnectionDialog   *cntnDialog;
 
-    static void setStyleWidget(QWidget *widget = 0, const QString &cssFile = QString());
+    void setStyleWidget(QWidget *widget = 0, const QString &cssFile = QString());
 };
 
 #endif // LOGISTICAPPLICATION_H

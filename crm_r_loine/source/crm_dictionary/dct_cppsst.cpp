@@ -7,15 +7,17 @@
 CCppsst::CCppsst(QWidget *parent) :
     QWidget(parent)
   , CDictionaryCore()
-  , ui   (new Ui::CCppsst)
-  , cppsstDialog (new CCppsstDialog(this))
+  , ui (new Ui::CCppsst)
 {
     ui->setupUi(this);
 
-    treeViewCppsst = new CTreeViewCppsst(this);
-    treeViewCppsst->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    treeViewCppsst->header()->setVisible(true);
-    ui->vLayoutTreeView->addWidget(treeViewCppsst);
+    treeCppsst = new CTreeViewCppsst(this);
+    treeCppsst->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    treeCppsst->header()->setVisible(true);
+    ui->vLayoutTreeView->addWidget(treeCppsst);
+
+// dialog
+    cppsstDialog = new CCppsstDialog(this);
 
     filter = new CFilter(this);
     filter->setObjectName("filter");
@@ -31,26 +33,81 @@ CCppsst::~CCppsst()
     if (IS_VALID_PTR(ui))           { delete ui;           ui           = nullptr; }
 }
 
-void CCppsst::columnHidden(QTreeView *view, QStandardItemModel *model, const QVector<int> &vector)
+QMenu *CCppsst::getContextMenu() const
 {
-    QVector<int>::const_iterator it = vector.begin();
-    while(it != vector.end()){
-        for (int i = 0; i != model->columnCount(); ++i){
-            if (i == *it)
-                 view->setColumnHidden(i, true);
-        }
-        ++it;
-    }
+    return treeCppsst->menu;
 }
 
-void CCppsst::slotCreateEditDialog(const int &r)
+void CCppsst::slotCreateEditDialog(const QString &action)
 {
-    Q_UNUSED(r);
+    Q_UNUSED(action);
 }
 
 CTreeViewCppsst::CTreeViewCppsst(QWidget *parent) :
     QTreeView(parent)
+  , menu(new QMenu(parent))
 {
+    setContextMenuPolicy(Qt::CustomContextMenu);
+
+    menu->addAction(new QAction(QObject::tr("Открыть документ"), this));
+    menu->addSeparator();
+    menu->addAction(new QAction(QObject::tr("Копировать"), this));
+    menu->addAction(new QAction(QObject::tr("Удалить"), this));
+    menu->addSeparator();
+    menu->addAction(new QAction(QObject::tr("Обновить"), this));
+
+    connect(this, SIGNAL(customContextMenuRequested(const QPoint &)),
+            SLOT(slotCustomContextMenuRequested(const QPoint &)));
+}
+
+CTreeViewCppsst::~CTreeViewCppsst()
+{
+    if IS_VALID_PTR(menu) { menu = nullptr; }
+}
+
+void CTreeViewCppsst::slotCustomContextMenuRequested(const QPoint &pos)
+{
+    for (QAction *action : menu->actions()){
+            action->setEnabled(true);
+    }
+    menu->setStyleSheet("QMenu {"
+                                "background-color: #f4f4f4;"
+                                "margin: 0px;"
+                                "border: 1px solid #515151;"
+                        "}"
+                        "QMenu::item {"
+                                "padding: 2px 25px 2px 20px;"
+                                "border: 1px solid transparent;"
+                        "}"
+                        "QMenu::item:selected {"
+                                "color: #ffffff;"
+                                "background-color: #68a44a;"
+                        "}"
+                        "QMenu::separator {"
+                                "height: 1px;"
+                                "background: #aaaaaa;"
+                                "margin-left: 10px;"
+                                "margin-right: 5px;"
+                        "}"
+                        "QMenu::indicator {"
+                                "width:  10px;"
+                                "height: 10px;"
+                        "}");
+    QModelIndex index = indexAt(pos);
+    QVector<int> disable;
+    if (index.isValid()){
+            disable.append(5);
+    } else {
+            disable.append(0);
+            disable.append(2);
+            disable.append(3);
+    }
+    for (auto i = disable.begin(); i != disable.end(); ++i){
+        if (disable.contains(*i)){
+            menu->actions().at(*i)->setEnabled(false);
+        }
+    }
+    menu->exec(viewport()->mapToGlobal(pos));
 }
 
 void CTreeViewCppsst::mousePressEvent(QMouseEvent *event)

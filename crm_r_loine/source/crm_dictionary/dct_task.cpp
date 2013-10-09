@@ -1,5 +1,3 @@
-#include "ui_dlg_cppsst.h"
-
 #include "source/crm_dictionary/dct_task.h"
 #include "source/crm_additionally/adl_communicate.h"
 
@@ -7,32 +5,33 @@ QT_BEGIN_NAMESPACE
 class QCoreApplication;
 QT_END_NAMESPACE
 
-TaskType::TaskType(QWidget *parent /* = 0 */):
+CTaskType::CTaskType(QWidget *parent /* = 0 */):
     CCppsst(parent)
-  , actualRecords(true)
+  , actualRecords(false)
 {
-
 // model
-    modelTask = new QStandardItemModel(this);
-    modelSelectionTask  = new QItemSelectionModel(modelTask);
+    modelTask          = new QStandardItemModel(this);
+    modelSelectionTask = new QItemSelectionModel(modelTask);
 
-    treeViewCppsst->setRootIsDecorated(false);
-    treeViewCppsst->setAlternatingRowColors(true);
-    treeViewCppsst->setModel(modelTask);
-    treeViewCppsst->setSelectionModel(modelSelectionTask);
+    treeCppsst->setRootIsDecorated(false);
+    treeCppsst->setAlternatingRowColors(true);
+    treeCppsst->setModel(modelTask);
+    treeCppsst->setSelectionModel(modelSelectionTask);
+    treeCppsst->installEventFilter(this);
 
     modelTask->insertColumns(0, TASK_MODEL_COLUMN_COUNT);
     modelTask->setHeaderData(1, Qt::Horizontal, QObject::tr("Наименование"));
-    QVector<int> vector;
-    columnHidden(treeViewCppsst, modelTask, vector << 0 << 2);
-                 vector.clear();
 
-    cppsstDialog->ui->comboBoxIcon->setEnabled (false);
-    cppsstDialog->ui->comboBoxIcon->setEditable(false);
+    QVector<int> storage;
+                 storage.append(0);
+                 storage.append(2);
+    CDictionaryCore::columnHidden(treeCppsst, modelTask, storage);
+                 storage.clear();
 
     ui->labelCurrentUser->setText(QString("Пользователь: <b><u>" + currentUser() + "</u></b>"));
 
-    connect(cppsstDialog, SIGNAL(saveDataChanged()), this, SLOT(slotInsertOrUpdateRecords()));
+    connect(cppsstDialog, SIGNAL(saveDataChanged(QList<QString>)), this, SLOT(slotInsertOrUpdateRecords(QList<QString>)));
+    connect(this, SIGNAL(enabledComboBox(bool)), cppsstDialog, SLOT(slotEnabledComboBox(bool)));
     connect(filter, SIGNAL(textChanged(QString)), SLOT(slotFindTask(QString)));
 
     slotFillTask();
@@ -40,44 +39,75 @@ TaskType::TaskType(QWidget *parent /* = 0 */):
     actualRecords
            ? ui->labelViewState->setText(QString(tr("Отображаются записи: <b><u>Актуальные</u></b>")))
            : ui->labelViewState->setText(QString(tr("Отображаются записи: <b><u>Все</u></b>")));
-
 }
 
-TaskType::~TaskType()
+CTaskType::~CTaskType()
 {
     if (IS_VALID_PTR(modelSelectionTask))  { delete modelSelectionTask;  modelSelectionTask  = nullptr; }
     if (IS_VALID_PTR(modelTask))           { delete modelTask;           modelTask           = nullptr; }
 }
 
-void TaskType::slotCreateEditDialog(const int &r)
+bool CTaskType::eventFilter(QObject *object, QEvent *event)
+{
+    if (object == qobject_cast<CTreeViewCppsst*>(treeCppsst)) {
+        if (event->type() == QEvent::FocusIn){
+
+            for (QAction *action : getContextMenu()->actions()){
+                disconnect(action, SIGNAL(triggered()), 0, 0);
+            }
+
+            connect(getContextMenu()->actions().at(0), SIGNAL(triggered()), SLOT(slotCreateEditDialog()));
+            connect(getContextMenu()->actions().at(2), SIGNAL(triggered()), SLOT(slotCopyRecords()));
+            connect(getContextMenu()->actions().at(3), SIGNAL(triggered()), SLOT(slotDeleteRecords()));
+            connect(getContextMenu()->actions().at(5), SIGNAL(triggered()), SLOT(slotRefreshRecords()));
+
+            return false;
+        }
+    }
+    return QWidget::eventFilter(object, event);
+}
+
+void CTaskType::slotCreateEditDialog(const QString &action)
 {
     if (currentDatabase().isOpen()) {
 
-        r == 0  ? rad = RecordActionDatabase::ardInsert
-                : rad = RecordActionDatabase::ardUpdate;
+        QString::compare(action, "add") == 0 ? act = Action::Add : act = Action::Edit;
 
         cppsstDialog->setWindowTitle(QString("Задача"));
 
-        if (treeViewCppsst == focusWidget()){
-            if (rad == 0){
-                if (fillFormSelectedRecord()){
+        emit enabledComboBox(false);
+
+        if (treeCppsst == focusWidget()){
+            if (act == Action::Add){
+
+                QList<QString> param;
+                if (fillListSelectedRecord(param)){
+                    cppsstDialog->fillFormSelectedRecord(param, act);
                     cppsstDialog->show();
                 }
-            }else if (rad == 1){
+            } else if (act == Action::Edit){
                 if (!modelSelectionTask->selection().isEmpty()){
-                    if (fillFormSelectedRecord()){
+
+                    QList<QString> param;
+                    if (fillListSelectedRecord(param)){
+                        cppsstDialog->fillFormSelectedRecord(param, act);
                         cppsstDialog->show();
                     }
                 } else
                     CCommunicate::showing(QString("Не удается выполнить, запись не выбрана"));
             }
         }else
-            CCommunicate::showing(QString("Не удается выполнить, таблица/запись не выбрана"));
+           CCommunicate::showing(QString("Не удается выполнить, таблица/запись не выбрана"));
     } else
         CCommunicate::showing(QString("Не удается выполнить, база данных не доступна"));
 }
 
-void TaskType::fillTaskModel(QSqlQuery &stored)
+void CTaskType::slotCreateEditDialog()
+{
+    slotCreateEditDialog("edit");
+}
+
+void CTaskType::fillTaskModel(QSqlQuery &stored)
 {
     modelTask->removeRows(0, modelTask->rowCount(QModelIndex()), QModelIndex());
     modelTask->insertRows(stored.numRowsAffected(), 0);
@@ -108,7 +138,7 @@ void TaskType::fillTaskModel(QSqlQuery &stored)
 #endif
 }
 
-void TaskType::slotCopyRecords(void)
+void CTaskType::slotCopyRecords(void)
 {
     QList<QVariant> list;
     QSqlQuery       stored;
@@ -137,7 +167,7 @@ void TaskType::slotCopyRecords(void)
                 slotRefreshRecords(); // refresh
 
             } else if (answer.clickedButton() == cancel){
-                treeViewCppsst->clearSelection();
+                treeCppsst->clearSelection();
                 answer.reject();
             }
         } else
@@ -147,7 +177,7 @@ void TaskType::slotCopyRecords(void)
 }
 
 
-void TaskType::slotDeleteRecords(void)
+void CTaskType::slotDeleteRecords(void)
 {
     QList<QVariant> list;
     QSqlQuery       stored;
@@ -176,7 +206,7 @@ void TaskType::slotDeleteRecords(void)
                 slotRefreshRecords(); // refresh
 
             } else if (answer.clickedButton() == cancel){
-                treeViewCppsst->clearSelection();
+                treeCppsst->clearSelection();
                 answer.reject();
             }
         } else
@@ -186,32 +216,42 @@ void TaskType::slotDeleteRecords(void)
 
 }
 
-void TaskType::slotRefreshRecords()
+void CTaskType::slotRefreshRecords()
 {
     slotFillTask();
 }
 
-bool TaskType::fillFormSelectedRecord(void)
+bool CTaskType::fillListSelectedRecord(QList<QString> &param)
 {
     QList<QVariant> list;
     QSqlQuery       stored;
 
-    if (rad == 0) {
-        cppsstDialog->ui->labelUserD->setText(QString("Нет данных"));
-        cppsstDialog->ui->labelDateD->setText(QString("Нет данных"));
-    } else if (rad == 1) {
+    if (act == Action::Add) {
 
-        list.append(modelSelectionTask->currentIndex().sibling(modelSelectionTask->currentIndex().row(), 0).data().toUInt());
+        param.append(QString("%1").arg(-1));
+        param.append("Нет данных");
+        param.append("Нет данных");
+
+    } else if (act == Action::Edit) {
+
+        const int code = modelSelectionTask->currentIndex().sibling(modelSelectionTask->currentIndex().row(), 0).data().toUInt();
+
+        list.append(code);
         stored.setForwardOnly(true);
         stored = execStored(currentDatabase(), "ReadOneTaskType", storageHashTable(list));
 
         if (stored.numRowsAffected() > 0) {
             while (stored.next()) {
-                cppsstDialog->setWindowTitle(QString(cppsstDialog->windowTitle() + " - [ %1 ]").arg(stored.value(stored.record().indexOf("tt_name")).toString()));
-                cppsstDialog->ui->lineEditName->setText(stored.value(stored.record().indexOf("tt_name")).toString());
-                cppsstDialog->ui->checkBoxActual->setChecked(stored.value(stored.record().indexOf("tt_actual")).toBool());
-                cppsstDialog->ui->labelUserD->setText(stored.value(stored.record().indexOf("tt_muser")).toString());
-                cppsstDialog->ui->labelDateD->setText(stored.value(stored.record().indexOf("tt_mdate")).toDateTime().toString("yyyy-MM-dd hh:mm:ss"));
+                const QString name = stored.value(stored.record().indexOf("tt_name")).toString();
+                const bool  actual = stored.value(stored.record().indexOf("tt_actual")).toBool();
+                const QString user = stored.value(stored.record().indexOf("tt_muser")).toString();
+                const QString date = stored.value(stored.record().indexOf("tt_mdate")).toDateTime().toString("yyyy-MM-dd hh:mm:ss");
+
+                param.append(name);
+                param.append(QString("%1").arg(-1));
+                param.append(QVariant(actual).toString());
+                param.append(user);
+                param.append(date);
             }
         } else {
             CCommunicate::showing(QString("Не удается выполнить, документ либо его элемент был удален другим пользователем"));
@@ -222,31 +262,31 @@ bool TaskType::fillFormSelectedRecord(void)
     return true;
 }
 
-void TaskType::slotInsertOrUpdateRecords(void)
+void CTaskType::slotInsertOrUpdateRecords(const QList<QString> &param)
 {
     QList<QVariant> list;
     QSqlQuery       stored;
 
-    if (rad == 0) {
-        list.append(cppsstDialog->ui->lineEditName->text());
-        list.append((int)cppsstDialog->ui->checkBoxActual->isChecked());
-        stored = execStored(currentDatabase(), "InsertTaskType", storageHashTable(list));
-        stored.finish();
-    }
-    else if (rad == 1) {
-        int code = modelSelectionTask->currentIndex().sibling(modelSelectionTask->currentIndex().row(), 0).data().toUInt();
+    int code = modelSelectionTask->currentIndex().sibling(modelSelectionTask->currentIndex().row(), 0).data().toUInt();
 
-        list.append(code);
-        list.append(cppsstDialog->ui->lineEditName->text());
-        list.append((int)cppsstDialog->ui->checkBoxActual->isChecked());
-        stored = execStored(currentDatabase(), "UpdateTaskType", storageHashTable(list));
-        stored.finish();
+    list.append(code);
+    list.append(param.at(0));
+    list.append(QVariant(param.at(2)).toBool());
+
+    if (act == Action::Add) {
+        list.removeAt(0);
+        stored = execStored(currentDatabase(), "InsertTaskType", storageHashTable(list));
     }
+    else if (act == Action::Edit) {
+        stored = execStored(currentDatabase(), "UpdateTaskType", storageHashTable(list));
+    }
+    stored.finish();
+
     slotRefreshRecords();
-    clearEditDialog(cppsstDialog);
+    CDictionaryCore::clearEditDialog(cppsstDialog);
 }
 
-void TaskType::slotFillTask()
+void CTaskType::slotFillTask()
 {
     QList<QVariant> list;
     QSqlQuery       stored;
@@ -271,7 +311,7 @@ void TaskType::slotFillTask()
     stored.finish();
 }
 
-void TaskType::slotActualRecords(const bool &actual)
+void CTaskType::slotActualRecords(const bool &actual)
 {
     actualRecords = !actual;
     slotRefreshRecords();
@@ -280,7 +320,7 @@ void TaskType::slotActualRecords(const bool &actual)
            : ui->labelViewState->setText(QString(tr("Отображаются записи: <b><u>Все</u></b>")));
 }
 
-void TaskType::slotFindTask(const QString &text)
+void CTaskType::slotFindTask(const QString &text)
 {
     QList<QVariant> list;
     QSqlQuery       stored;

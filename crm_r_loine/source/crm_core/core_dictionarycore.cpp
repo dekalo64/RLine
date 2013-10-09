@@ -16,7 +16,7 @@ const QString CDictionaryCore::currentUser(void)
     return userName;
 }
 
-const QHash<QString, QVariant> CDictionaryCore::storageHashTable(QList<QVariant> &list)
+const QHash<QString, QVariant> CDictionaryCore::storageHashTable(const QList<QVariant> &list)
 {
     unsigned i(0);
     QHash <QString, QVariant> hash;
@@ -64,14 +64,14 @@ QSqlQuery CDictionaryCore::execStored(const QSqlDatabase &database, const QStrin
     return stored;
 }
 
-QSqlDatabase CDictionaryCore::currentDatabase() const
+const QSqlDatabase CDictionaryCore::currentDatabase()
 {
-    return LogisticApplication::instance()->database;
+    return CLogisticApplication::instance()->database;
 }
 
-void CDictionaryCore::clearEditDialog(QDialog *editDialog)
+void CDictionaryCore::clearEditDialog(QDialog *dialog)
 {
-    foreach (QWidget *widget, editDialog->findChildren<QWidget*>()) {
+    foreach (QWidget *widget, dialog->findChildren<QWidget*>()) {
         if (QLineEdit *le = qobject_cast<QLineEdit*>(widget)){
            le->clear();
         }
@@ -79,7 +79,7 @@ void CDictionaryCore::clearEditDialog(QDialog *editDialog)
            chb->setChecked(false);
         }
         if (QComboBox *cmb = qobject_cast<QComboBox*>(widget)){
-           cmb->setCurrentIndex(0);
+           cmb->setCurrentIndex(-1);
         }
         if (QTextEdit *txt = qobject_cast<QTextEdit*>(widget)){
            txt->clear();
@@ -88,7 +88,7 @@ void CDictionaryCore::clearEditDialog(QDialog *editDialog)
            lw->clear();
         }
     }
-    editDialog->accept();
+    dialog->accept();
 }
 
 CFilter::CFilter(QWidget *parent)
@@ -103,12 +103,30 @@ CFilter::CFilter(QWidget *parent)
     clearButton->setIcon(QIcon(pixmapClear));
     clearButton->setIconSize(pixmapClear.size());
     clearButton->setCursor(Qt::PointingHandCursor);
-    clearButton->setStyleSheet("QToolButton { border: none; padding: 0px; }");
+    clearButton->setStyleSheet("QToolButton {"
+                                    "border: none;"
+                                    "padding: 0px;"
+                               "}"
+
+                               "QToolButton:hover {"
+                                    "border: none;"
+                                    "border-radius: 0px;"
+                                    "background-color: transparent;"
+                               "}");
     clearButton->hide();
 
     searchButton->setIcon(QIcon(pixmapSearch));
     searchButton->setIconSize(pixmapSearch.size());
-    searchButton->setStyleSheet("QToolButton { border: none; padding: 0px; }");
+    searchButton->setStyleSheet("QToolButton {"
+                                    "border: none;"
+                                    "padding: 0px;"
+                                "}"
+
+                                "QToolButton:hover {"
+                                    "border: none;"
+                                    "border-radius: 0px;"
+                                    "background-color: transparent;"
+                                "}");
 
     connect(this, SIGNAL(textChanged(const QString&)), SLOT(slotUpdateCloseButton(const QString&)));
     connect(clearButton, SIGNAL(clicked()), SLOT(slotClearSearchToItem()));

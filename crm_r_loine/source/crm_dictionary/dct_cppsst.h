@@ -21,24 +21,27 @@ class CTreeViewCppsst;
 class CCppsst: public QWidget, public CDictionaryCore
 {
     Q_OBJECT
-    Q_ENUMS(RecordActionDatabase::Enum)
 
 public:
     explicit CCppsst(QWidget *parent = 0);
     virtual ~CCppsst();
 
-    void columnHidden  (QTreeView *view, QStandardItemModel *model, const QVector<int> &vector);
+    QMenu *getContextMenu(void) const;
 
 protected slots:
-    virtual void slotCreateEditDialog(const int &r) = 0; // abstract method
+    virtual void slotCreateEditDialog(const QString &action) = 0; // abstract method
+
+Q_SIGNALS:
+    void enabledComboBox(const bool &);
 
 public:
-    Ui::CCppsst                 *ui;
-    CTreeViewCppsst             *treeViewCppsst;
-    CCppsstDialog               *cppsstDialog;
-    CFilter                     *filter;
+    Ui::CCppsst     *ui;
 
-    RecordActionDatabase::Enum   rad;
+    CTreeViewCppsst *treeCppsst;
+    CCppsstDialog   *cppsstDialog;
+    CFilter         *filter;
+
+    Action           act;
 };
 
 class CTreeViewCppsst : public QTreeView
@@ -46,7 +49,11 @@ class CTreeViewCppsst : public QTreeView
     Q_OBJECT
 
 public:
-    CTreeViewCppsst(QWidget *parent = 0);
+    explicit CTreeViewCppsst(QWidget *parent = 0);
+    virtual  ~CTreeViewCppsst();
+
+private slots:
+    void slotCustomContextMenuRequested(const QPoint &pos);
 
 protected:
     void mousePressEvent(QMouseEvent *event);
@@ -56,8 +63,11 @@ protected:
     void dropEvent(QDropEvent *event);
 
 private:
+    friend QMenu *CCppsst::getContextMenu(void) const;
     void draging();
+
     QPoint startPosition;
+    QMenu  *menu;
 };
 
 #endif // DICTIONARYTEMPLATE_H

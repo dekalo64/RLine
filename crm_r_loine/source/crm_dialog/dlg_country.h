@@ -1,37 +1,35 @@
-#ifndef COUNTRYDIALOG_H
-#define COUNTRYDIALOG_H
+#ifndef CCOUNTRYDIALOG_H
+#define CCOUNTRYDIALOG_H
 
-#include <QDialog>
+#include "source/crm_core/core_logisticnamespace.h"
+
+#include <QtGui/QDialog>
 
 namespace Ui {
-class CountryDialog;
+class CCountryDialog;
 }
 
-class CountryDialog : public QDialog
+class CCountryDialog : public QDialog
 {
     Q_OBJECT
     
 public:
-    explicit CountryDialog(QWidget *parent = 0);
-    ~CountryDialog();
+    explicit CCountryDialog(QWidget *parent = 0);
+    virtual ~CCountryDialog();
+
+    void fillFormSelectedRecord(const QList<QString> &param, const Action &act);
 
 protected:
     void closeEvent(QCloseEvent *);
-    void showEvent(QShowEvent *);
 
 signals:
-    void saveDataChanged();
+    void saveDataChanged(const QList<QString> &param);
 
 private slots:
-    void slotCurrentChanged() { updateActions(); }
     void slotSaveDataChanged();
 
 private:
-    void updateActions();
-    bool enableSave;
-
-public:
-    Ui::CountryDialog *ui;
+    Ui::CCountryDialog *ui;
 };
 
-#endif // COUNTRYDIALOG_H
+#endif // CCOUNTRYDIALOG_H

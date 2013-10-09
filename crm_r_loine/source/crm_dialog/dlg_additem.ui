@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>AddItem</class>
- <widget class="QDialog" name="AddItem">
+ <class>CAddItem</class>
+ <widget class="QDialog" name="CAddItem">
   <property name="windowModality">
    <enum>Qt::WindowModal</enum>
   </property>
@@ -9,52 +9,57 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>250</width>
-    <height>114</height>
+    <width>227</width>
+    <height>128</height>
    </rect>
   </property>
   <property name="sizePolicy">
-   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+   <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
     <horstretch>0</horstretch>
     <verstretch>0</verstretch>
    </sizepolicy>
   </property>
   <property name="minimumSize">
    <size>
-    <width>250</width>
-    <height>114</height>
+    <width>227</width>
+    <height>128</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>250</width>
-    <height>114</height>
+    <width>227</width>
+    <height>128</height>
    </size>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string/>
   </property>
   <property name="modal">
    <bool>true</bool>
   </property>
   <layout class="QGridLayout" name="gridLayout_2">
    <item row="0" column="0" colspan="2">
-    <widget class="QGroupBox" name="m_newChoose">
-     <property name="title">
-      <string/>
+    <widget class="QGroupBox" name="groupBoxNewChoose">
+     <property name="font">
+      <font>
+       <family>Arial</family>
+       <pointsize>9</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
      </property>
-     <property name="alignment">
-      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+     <property name="title">
+      <string>Что добавить?</string>
      </property>
      <property name="flat">
-      <bool>false</bool>
+      <bool>true</bool>
      </property>
      <property name="checkable">
       <bool>false</bool>
      </property>
      <layout class="QGridLayout" name="gridLayout">
       <item row="0" column="0">
-       <widget class="QRadioButton" name="radioNewCatalog">
+       <widget class="QRadioButton" name="radioAddCatalog">
         <property name="font">
          <font>
           <family>Arial</family>
@@ -75,7 +80,7 @@
        </widget>
       </item>
       <item row="1" column="0">
-       <widget class="QRadioButton" name="radioNewSubCatalog">
+       <widget class="QRadioButton" name="radioAddDocument">
         <property name="font">
          <font>
           <family>Arial</family>
@@ -85,13 +90,7 @@
          </font>
         </property>
         <property name="text">
-         <string>Новый подкаталог</string>
-        </property>
-        <property name="iconSize">
-         <size>
-          <width>16</width>
-          <height>16</height>
-         </size>
+         <string>Новый документ</string>
         </property>
        </widget>
       </item>

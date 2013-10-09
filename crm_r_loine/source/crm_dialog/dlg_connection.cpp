@@ -39,22 +39,13 @@ ConnectionDialog::ConnectionDialog(QWidget *parent)
                  password->move(ui->lineEditPassword->rect().left() + 4,
                                     (ui->lineEditPassword->rect().bottom() + 1 - szPassword.height()) / 3);
 
-    connect(ui->lineEditUserName, SIGNAL(textEdited(QString)), this, SLOT(currentChanged()));
     connect(ui->buttonDatabaseConnect, SIGNAL(clicked()), SLOT(slotDataBaseConnect()));
     connect(ui->buttonCancel, SIGNAL(clicked()), SLOT(slotExitApplication()));
-
-    updateActions();
 }
 
 ConnectionDialog::~ConnectionDialog()
 {
-    delete ui; ui = 0;
-}
-
-void ConnectionDialog::updateActions()
-{
-    bool m_enableBtnConnect = ((!ui->lineEditUserName->text().isEmpty()));
-    ui->buttonDatabaseConnect->setEnabled(m_enableBtnConnect);
+    delete ui; ui = nullptr;
 }
 
 QString ConnectionDialog::userName() const
@@ -69,6 +60,10 @@ QString ConnectionDialog::password() const
 
 void ConnectionDialog::slotDataBaseConnect()
 {
+    if (ui->lineEditUserName->text().isEmpty()){
+        CCommunicate::showing("Неправильно указан логин и/или пароль");
+        return;
+    }
     emit sendUserInformation(userName(), password());
 }
 

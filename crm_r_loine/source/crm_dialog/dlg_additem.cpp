@@ -2,26 +2,27 @@
 
 #include "source/crm_dialog/dlg_additem.h"
 
-AddItem::AddItem(QWidget *parent) :
+CAddItem::CAddItem(QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::AddItem)
+    ui(new Ui::CAddItem)
 {
     setWindowFlags(Qt::Drawer);
     ui->setupUi(this);
 
     setWindowTitle("Добавить");
-    ui->radioNewCatalog->setIcon(QIcon("data/picture/additionally/catalog.ico"));
-    ui->radioNewSubCatalog->setIcon(QIcon("data/picture/additionally/sub-catalog.ico"));
+    ui->radioAddCatalog->setIcon (QIcon("data/picture/additionally/catalog.ico"));
+    ui->radioAddDocument->setIcon(QIcon("data/picture/additionally/document.ico"));
+
     connect(ui->buttonCancel, SIGNAL(clicked()), SLOT(close()));
 }
 
-AddItem::~AddItem()
+CAddItem::~CAddItem()
 {
     delete ui;
 }
 
-void AddItem::showEvent(QShowEvent *)
+void CAddItem::showEvent(QShowEvent *)
 {
-    ui->radioNewCatalog->setChecked(true);
+    ui->radioAddCatalog->setChecked(true);
 }
 

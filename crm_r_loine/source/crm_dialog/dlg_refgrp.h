@@ -1,7 +1,7 @@
 #ifndef REFGRPDIALOG_H
 #define REFGRPDIALOG_H
 
-#include <QDialog>
+#include <QtGui/QDialog>
 
 namespace Ui {
 class RefGrpDialog;
@@ -17,17 +17,12 @@ public:
 
 protected:
     void closeEvent(QCloseEvent *);
-    void showEvent(QShowEvent *);
 
 signals:
     void saveDataChanged();
 
 private slots:
-    void slotCurrentChanged() { updateActions(); }
     void slotSaveDataChanged();
-
-private:
-    void updateActions();
     
 public:
     Ui::RefGrpDialog *ui;
