@@ -2,6 +2,7 @@
 
 #include "source/crm_dictionary/dct_suppliers.h"
 #include "source/crm_additionally/adl_communicate.h"
+#include "source/crm_dialog/dlg_message.h"
 
 QT_BEGIN_NAMESPACE
 class QCoreApplication;
@@ -445,25 +446,6 @@ bool CSuppliers::fillListSelectedRecord(QList<QVariant> &param)
                              param.append(delivery);
                              param.append(prepayment);
 
-                             {
-                                 // list of producers belonging to suppliers
-                                 QSqlQuery stored;
-                                           stored.setForwardOnly(true);
-                                 stored = execStored(currentDatabase(), "ReadProducerByGroup", storageHashTable());
-
-                                 QHash<QString, QVariant> producer;
-
-                                 QString key, value;
-
-                                 while (stored.next()){
-                                     key   = stored.value(stored.record().indexOf("prg_prod_code")).toString();
-                                     value = stored.value(stored.record().indexOf("par_name_first")).toString();
-
-                                     producer.insert(key, QVariant(value).toString());
-                                 }
-                                 param.append(QVariant(producer));
-                             }
-
                              const bool    actual     = stored.value(stored.record().indexOf("par_actual")).toBool();
                              const QString user       = stored.value(stored.record().indexOf("par_muser")).toString();
                              const QString date       = stored.value(stored.record().indexOf("par_mdate")).toString();
@@ -657,11 +639,7 @@ void CSuppliers::slotCopyRecords()
 
             if (focusedWidget->objectName() == treeSuppliers->objectName()){
                 if (modelSelectionSuppliers->isSelected(modelSelectionSuppliers->currentIndex())){
-                    QMessageBox answer;
-                                answer.setText(QString("Подтверждаете копирование?"));
-                                answer.setWindowTitle(QString("Копирование"));
-                                answer.setIcon(QMessageBox::Question);
-
+                    CMessage answer(this, "Копирование", "Подтверждаете копирование?");
                     QPushButton *copy   = answer.addButton(QString("Копировать"), QMessageBox::ActionRole);
                     QPushButton *cancel = answer.addButton(QString("Отмена"),     QMessageBox::ActionRole);
 
@@ -713,11 +691,7 @@ void CSuppliers::slotPasteRecords()
                 (focusedWidget->objectName() == treeSuppliers->objectName())){
                   if (modelSelectionCountry->isSelected(modelSelectionCountry->currentIndex()) && ms.codeSuppliers > -1) {
 
-                      QMessageBox answer;
-                                  answer.setText(QString("Подтверждаете перемещение?"));
-                                  answer.setWindowTitle(QString("Перемещение"));
-                                  answer.setIcon(QMessageBox::Question);
-
+                      CMessage answer(this, "Перемещение", "Подтверждаете перемещение?");
                       QPushButton *move   = answer.addButton(QString("Переместить"), QMessageBox::ActionRole);
                       QPushButton *cancel = answer.addButton(QString("Отмена"),     QMessageBox::ActionRole);
 
@@ -791,11 +765,7 @@ void CSuppliers::slotDeleteRecords()
                 removable = true;
             }
             if (removable){
-                QMessageBox answer;
-                            answer.setText(QString("Подтверждаете удаление?"));
-                            answer.setWindowTitle(QString("Удаление"));
-                            answer.setIcon(QMessageBox::Question);
-
+                CMessage answer(this, "Удаление", "Подтверждаете удаление?");
                 QPushButton *_delete = answer.addButton(QString("Удалить"), QMessageBox::ActionRole);
                 QPushButton *cancel = answer.addButton(QString("Отмена"),  QMessageBox::ActionRole);
 
@@ -830,7 +800,7 @@ void CSuppliers::slotDeleteRecords()
 void CSuppliers::slotRefreshRecords()
 {
     if (focusedWidget->objectName() == treeCountry->objectName()){
-            slotRefreshRecordsCountry();
+           slotRefreshRecordsCountry();
     } else
     if (focusedWidget->objectName() == treeSuppliers->objectName()){
            slotRefreshRecordsSuppliers();

@@ -2,6 +2,7 @@
 
 #include "source/crm_dictionary/dct_countrycity.h"
 #include "source/crm_additionally/adl_communicate.h"
+#include "source/crm_dialog/dlg_message.h"
 
 QT_BEGIN_NAMESPACE
 class QCoreApplication;
@@ -429,11 +430,7 @@ void CCountryCity::slotCopyRecords()
 
             if (focusedWidget->objectName() == treeCity->objectName()){
                 if (modelSelectionCity->isSelected(modelSelectionCity->currentIndex())){
-                    QMessageBox answer;
-                                answer.setText(QString("Подтверждаете копирование?"));
-                                answer.setWindowTitle(QString("Копирование"));
-                                answer.setIcon(QMessageBox::Question);
-
+                    CMessage answer(this, "Копирование", "Подтверждаете копирование?");
                     QPushButton *copy   = answer.addButton(QString("Копировать"), QMessageBox::ActionRole);
                     QPushButton *cancel = answer.addButton(QString("Отмена"),     QMessageBox::ActionRole);
 
@@ -485,11 +482,7 @@ void CCountryCity::slotPasteRecords(void)
                 (focusedWidget->objectName() == treeCity->objectName())){
                   if (modelSelectionCountry->isSelected(modelSelectionCountry->currentIndex()) && mc.codeCity > -1) {
 
-                      QMessageBox answer;
-                                  answer.setText(QString("Подтверждаете перемещение?"));
-                                  answer.setWindowTitle(QString("Перемещение"));
-                                  answer.setIcon(QMessageBox::Question);
-
+                      CMessage answer(this, "Перемещение", "Подтверждаете перемещение?");
                       QPushButton *move   = answer.addButton(QString("Переместить"), QMessageBox::ActionRole);
                       QPushButton *cancel = answer.addButton(QString("Отмена"),     QMessageBox::ActionRole);
 
@@ -562,11 +555,7 @@ void CCountryCity::slotDeleteRecords(void)
                 removable = true;
             }
             if (removable){
-                QMessageBox answer;
-                            answer.setText(QString("Подтверждаете удаление?"));
-                            answer.setWindowTitle(QString("Удаление"));
-                            answer.setIcon(QMessageBox::Question);
-
+                CMessage answer(this, "Удаление", "Подтверждаете удаление?");
                 QPushButton *_delete = answer.addButton(QString("Удалить"), QMessageBox::ActionRole);
                 QPushButton *cancel = answer.addButton(QString("Отмена"),  QMessageBox::ActionRole);
 

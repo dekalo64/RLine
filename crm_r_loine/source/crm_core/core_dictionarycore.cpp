@@ -54,7 +54,7 @@ QSqlQuery CDictionaryCore::execStored(const QSqlDatabase &database, const QStrin
     if (hash.isEmpty())
         stored.prepare(storedFunction);
     else
-        stored.prepare(QString("{CALL %1(?%2)}")
+        stored.prepare(QString("EXECUTE %1 ?%2")
                        .arg(storedFunction)
                        .arg(QString(", ?").repeated(hash.size()-1)));
     for (QHash<QString, QVariant>::const_iterator i = hash.constBegin(); i != hash.constEnd(); ++i){

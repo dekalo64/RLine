@@ -37,7 +37,8 @@ HEADERS += \
     source/crm_dictionary/dct_priorities.h \
     source/crm_dictionary/dct_status.h \
     source/crm_dictionary/dct_suppliers.h \
-    source/crm_dictionary/dct_task.h
+    source/crm_dictionary/dct_task.h \
+    source/crm_dialog/dlg_message.h
 
 SOURCES += \
 #    source/crm_dialog/dlg_refgrp.cpp \
@@ -69,7 +70,8 @@ SOURCES += \
     source/crm_dictionary/dct_task.cpp \
     source/crm_core/core_dictionarycore.cpp \
     source/crm_dictionary/dct_cppsst.cpp \
-    source/crm_dialog/dlg_cppsst.cpp
+    source/crm_dialog/dlg_cppsst.cpp \
+    source/crm_dialog/dlg_message.cpp
 
 FORMS += \
     source/crm_dictionary/dct_contacts.ui \

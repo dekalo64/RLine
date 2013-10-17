@@ -6,6 +6,7 @@
 
 #include "source/crm_dictionary/dct_customer.h"
 #include "source/crm_additionally/adl_communicate.h"
+#include "source/crm_dialog/dlg_message.h"
 
 CCustomer::CCustomer(QWidget *parent) :
     QWidget(parent)
@@ -516,11 +517,7 @@ void CCustomer::slotCopyRecords()
             if (focusedWidget->objectName() == treeFaces->objectName()){
                 if (modelSelectionFaces->isSelected(modelSelectionFaces->currentIndex()) &&
                     modelSelectionFaces->currentIndex().sibling(modelSelectionFaces->currentIndex().row(), 3).data().toString() == nullptr){
-                    QMessageBox answer;
-                                answer.setText(QString("Подтверждаете копирование?"));
-                                answer.setWindowTitle(QString("Копирование"));
-                                answer.setIcon(QMessageBox::Question);
-
+                    CMessage answer(this, "Копирование", "Подтверждаете копирование?");
                     QPushButton *copy   = answer.addButton(QString("Копировать"), QMessageBox::ActionRole);
                     QPushButton *cancel = answer.addButton(QString("Отмена"),     QMessageBox::ActionRole);
 
@@ -563,11 +560,7 @@ void CCustomer::slotPasteRecords()
             if (focusedWidget->objectName() == treeFaces->objectName()){
                   if (modelSelectionFaces->isSelected(modelSelectionFaces->currentIndex()) &&  mc.idCustomer > -1) {
 
-                      QMessageBox answer;
-                                  answer.setText(QString("Подтверждаете перемещение?"));
-                                  answer.setWindowTitle(QString("Перемещение"));
-                                  answer.setIcon(QMessageBox::Question);
-
+                      CMessage answer(this, "Перемещение", "Подтверждаете перемещение?");
                       QPushButton *move   = answer.addButton(QString("Переместить"), QMessageBox::ActionRole);
                       QPushButton *cancel = answer.addButton(QString("Отмена"),     QMessageBox::ActionRole);
 
@@ -619,11 +612,7 @@ void CCustomer::slotDeleteRecords()
 
             if (focusedWidget->objectName() == treeFaces->objectName()){
                if (!modelSelectionFaces->selection().isEmpty()){
-                QMessageBox answer;
-                            answer.setText(QString("Подтверждаете удаление?"));
-                            answer.setWindowTitle(QString("Удаление"));
-                            answer.setIcon(QMessageBox::Question);
-
+                CMessage answer(this, "Удаление", "Подтверждаете удаление?");
                 QPushButton *_delete = answer.addButton(QString("Удалить"), QMessageBox::ActionRole);
                 QPushButton *cancel = answer.addButton(QString("Отмена"),  QMessageBox::ActionRole);
 

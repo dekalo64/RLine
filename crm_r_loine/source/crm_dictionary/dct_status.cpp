@@ -1,5 +1,6 @@
 #include "source/crm_dictionary/dct_status.h"
 #include "source/crm_additionally/adl_communicate.h"
+#include "source/crm_dialog/dlg_message.h"
 
 QT_BEGIN_NAMESPACE
 class QCoreApplication;
@@ -148,11 +149,7 @@ void CStatus::slotCopyRecords(void)
         int code = modelSelectionStatus->currentIndex().sibling(modelSelectionStatus->currentIndex().row(), 0).data().toUInt();
 
         if (!modelSelectionStatus->selection().isEmpty()){
-            QMessageBox answer;
-                        answer.setText(QString("Подтверждаете копирование?"));
-                        answer.setWindowTitle("Копирование");
-                        answer.setIcon(QMessageBox::Question);
-
+            CMessage answer(this, "Копирование", "Подтверждаете копирование?");
             QPushButton *copy   = answer.addButton(QString("Копировать"), QMessageBox::ActionRole);
             QPushButton *cancel = answer.addButton(QString("Отмена"),     QMessageBox::ActionRole);
 
@@ -186,11 +183,7 @@ void CStatus::slotDeleteRecords(void)
         int code = modelSelectionStatus->currentIndex().sibling(modelSelectionStatus->currentIndex().row(), 0).data().toUInt();
 
         if (!modelSelectionStatus->selection().isEmpty()) {
-            QMessageBox answer;
-                        answer.setText(QString("Подтверждаете удаление?"));
-                        answer.setWindowTitle(QString("Удаление"));
-                        answer.setIcon(QMessageBox::Question);
-
+            CMessage answer(this, "Удаление", "Подтверждаете удаление?");
             QPushButton *_delete = answer.addButton(QString("Удалить"), QMessageBox::ActionRole);
             QPushButton *cancel = answer.addButton(QString("Отмена"),  QMessageBox::ActionRole);
 

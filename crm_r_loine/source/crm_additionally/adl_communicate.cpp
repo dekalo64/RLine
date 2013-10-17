@@ -23,18 +23,13 @@ void CCommunicate::hiding()
 CCommunicate::CCommunicate(const QString &message)
     : QDialog(0, Qt::Window | Qt::CustomizeWindowHint)
 {
+    setWindowFlags(Qt::Drawer);
+    setWindowTitle("Ошибка");
     setObjectName("CCommunicate");
-
     setModal(true);
 
-    setMaximumSize(QSize(280, 130));
-    setMinimumSize(QSize(280, 130));
-
-    QLabel *title = new QLabel("Ошибка", this);
-
-    QFont fontTitle(QFont("Arial", 11));
-          fontTitle.setBold (true);
-    title->setFont(fontTitle);
+    setMaximumSize(QSize(250, 100));
+    setMinimumSize(QSize(250, 100));
 
     QLabel *image = new QLabel(this);
             image->setPixmap(QPixmap("data/picture/additionally/alert.png"));
@@ -72,13 +67,6 @@ CCommunicate::CCommunicate(const QString &message)
     QVBoxLayout *vbox = new QVBoxLayout(this);
                  vbox->setAlignment(buttonSave, Qt::AlignRight);
 
-    QHBoxLayout *hboxTitle = new QHBoxLayout(this);
-                 hboxTitle->addWidget(title);
-
-    QFrame *line = new QFrame(this);
-            line->setFrameShape(QFrame::HLine);
-            line->setFrameShadow(QFrame::Sunken);
-
     QHBoxLayout *hboxText = new QHBoxLayout(this);
                  hboxText->addWidget(image);
                  hboxText->addWidget(text);
@@ -87,8 +75,6 @@ CCommunicate::CCommunicate(const QString &message)
                  hboxButton->addWidget(buttonSave);
                  hboxButton->setAlignment(buttonSave, Qt::AlignCenter);
 
-    vbox->addLayout(hboxTitle);
-    vbox->addWidget(line);
     vbox->addLayout(hboxText);
     vbox->addLayout(hboxButton);
 

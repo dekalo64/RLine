@@ -33,6 +33,7 @@ private slots:
     void slotOpenDictionary();
     void slotInsertProducer();
     void slotDeleteProducer();
+    void slotRefreshProducer();
 
     void slotSaveDataChanged();
     void slotTabCurrentChanged(const int &tab);
@@ -42,6 +43,8 @@ private:
     QStandardItemModel  *modelProducer;
     QItemSelectionModel *modelSelectionProducer;
     QMenu               *menu;
+
+    bool                 removable;
 
 };
 

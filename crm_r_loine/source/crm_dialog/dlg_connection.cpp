@@ -8,6 +8,7 @@ ConnectionDialog::ConnectionDialog(QWidget *parent)
 {
     ui->setupUi(this);
 
+    setWindowTitle("Вход");
     setWindowFlags(Qt::Window | Qt::CustomizeWindowHint);
     setModal(true);
 
@@ -61,7 +62,7 @@ QString ConnectionDialog::password() const
 void ConnectionDialog::slotDataBaseConnect()
 {
     if (ui->lineEditUserName->text().isEmpty()){
-        CCommunicate::showing("Неправильно указан логин и/или пароль");
+        CCommunicate::showing(QString("Неправильно указан логин и/или пароль"));
         return;
     }
     emit sendUserInformation(userName(), password());

@@ -3,6 +3,7 @@
 #include "source/crm_dialog/dlg_supplier.h"
 #include "source/crm_core/core_dictionarycore.h"
 #include "source/crm_core/core_logisticmainwindow.h"
+#include "source/crm_dialog/dlg_message.h"
 
 CSupplierDialog::CSupplierDialog(QWidget *parent) :
     QDialog(parent)
@@ -11,6 +12,8 @@ CSupplierDialog::CSupplierDialog(QWidget *parent) :
 { 
     ui->setupUi(this);
     setWindowFlags(Qt::Drawer);
+
+    removable = false;
 
 // model
     modelProducer = new QStandardItemModel(this);
@@ -146,27 +149,52 @@ void CSupplierDialog::fillFormSelectedRecord(const QList<QVariant> &param, const
         ui->spinDeliveryTime->setValue(QVariant(param.at(33)).toUInt());
         ui->spinPrepayment->setValue(QVariant(param.at(34)).toFloat() * 100);
 
-        QHash<QString, QVariant> hash = QVariant(param.at(35)).toHash();
         short   rows(0);
 
+        int     code(0);
+        QString prod;
+
         modelProducer->removeRows(0, modelProducer->rowCount(QModelIndex()), QModelIndex());
+{
+        QSqlQuery stored;
+                  stored.setForwardOnly(true);
+        stored = CDictionaryCore::execStored(CDictionaryCore::currentDatabase(), "ReadProducerByGroup", CDictionaryCore::storageHashTable());
+        while (stored.next()){
+             code  = stored.value(stored.record().indexOf("prg_prod_code")).toInt();
+             prod  = stored.value(stored.record().indexOf("par_name_first")).toString();
 
-        QHash<QString, QVariant>::const_iterator i = hash.constBegin();
-        for (; i != hash.constEnd(); ++i){
-            modelProducer->setItem(rows, 0, new QStandardItem(i.key()));
-            modelProducer->setItem(rows, 1, new QStandardItem(QIcon("data/picture/additionally/processor.png"), QVariant(i.value()).toString()));
-
-            ++rows;
+             modelProducer->setItem(rows, 0, new QStandardItem(QString("%1").arg(code)));
+             modelProducer->setItem(rows, 1, new QStandardItem(QIcon("data/picture/additionally/processor.png"), prod));
+          ++rows;
         }
-
-        ui->checkActual->setChecked (QVariant(param.at(36)).toBool());
-        ui->labelUserD->setText(QVariant(param.at(37)).toString());
-        ui->labelDateD->setText (QVariant(param.at(38)).toDateTime().toString("yyyy-MM-dd hh:mm:ss"));
+}
+        ui->checkActual->setChecked(QVariant(param.at(35)).toBool());
+        ui->labelUserD->setText(QVariant(param.at(36)).toString());
+        ui->labelDateD->setText(QVariant(param.at(37)).toDateTime().toString("yyyy-MM-dd hh:mm:ss"));
     }
 }
 
 void CSupplierDialog::closeEvent(QCloseEvent *)
 {
+        if (removable){
+            if (!modelSelectionProducer->selection().isEmpty()){
+            CMessage answer(this, "Внимание", "Сохранить изменения в документе перед закрытием?");
+            QPushButton *yes    = answer.addButton(QString("Да"),  QMessageBox::ActionRole);
+            QPushButton *no     = answer.addButton(QString("Нет"), QMessageBox::ActionRole);
+
+            answer.exec();
+
+            if (answer.clickedButton() == yes){
+                if (!modelSelectionProducer->selection().isEmpty()){
+//                      list.append(GROUP_TYPE_SUPPLIERS);
+//                      list.append(code);
+                }
+            } else if (answer.clickedButton() == no){
+                answer.reject();
+              }
+            } else
+                CCommunicate::showing(QString("Не удается выполнить, запись не выбрана"));
+        }
     setWindowTitle("Поставщик");
     CDictionaryCore::clearEditDialog(this);
 }
@@ -202,7 +230,7 @@ void CSupplierDialog::slotOpenDictionary()
 
 void CSupplierDialog::slotInsertProducer()
 {
-    QMessageBox::information(0, "title", "ins");
+
 }
 
 void CSupplierDialog::slotDeleteProducer()
@@ -217,24 +245,46 @@ void CSupplierDialog::slotDeleteProducer()
         }
     }
 
-    QMessageBox answer;
-                answer.setText(QString("Подтверждаете удаление?"));
-                answer.setWindowTitle(QString("Удаление"));
-                answer.setIcon(QMessageBox::Question);
-
-    QPushButton *_delete = answer.addButton(QString("Удалить"), QMessageBox::ActionRole);
-    QPushButton *cancel  = answer.addButton(QString("Отмена"),  QMessageBox::ActionRole);
+    CMessage answer(this, "Удаление", "Подтверждаете удаление?");
+    QPushButton *buttonSave    = answer.addButton(QString("Удалить"), QMessageBox::ActionRole);
+    QPushButton *buttonCancel  = answer.addButton(QString("Отмена"),  QMessageBox::ActionRole);
 
     answer.exec();
 
-    if (answer.clickedButton() == _delete){
+    if (answer.clickedButton() == buttonSave){
         const unsigned code = modelSelectionProducer->currentIndex().sibling(modelSelectionProducer->currentIndex().row(), 0).data().toUInt();
         list.append(code);
 
         stored = CDictionaryCore::execStored(CDictionaryCore::currentDatabase(), "DeleteProducerGroup", CDictionaryCore::storageHashTable(list));
         stored.finish();
 
-    } else if (answer.clickedButton() == cancel){
+        modelProducer->removeRows(modelSelectionProducer->currentIndex().row(), 1, QModelIndex());
+
+        removable = true;
+
+    } else if (answer.clickedButton() == buttonCancel){
         answer.reject();
+    }
+}
+
+void CSupplierDialog::slotRefreshProducer()
+{
+    short   rows(0);
+
+    int     code(0);
+    QString prod;
+
+    modelProducer->removeRows(0, modelProducer->rowCount(QModelIndex()), QModelIndex());
+
+    QSqlQuery stored;
+              stored.setForwardOnly(true);
+    stored = CDictionaryCore::execStored(CDictionaryCore::currentDatabase(), "ReadProducerByGroup", CDictionaryCore::storageHashTable());
+    while (stored.next()){
+         code  = stored.value(stored.record().indexOf("prg_prod_code")).toInt();
+         prod  = stored.value(stored.record().indexOf("par_name_first")).toString();
+
+         modelProducer->setItem(rows, 0, new QStandardItem(QString("%1").arg(code)));
+         modelProducer->setItem(rows, 1, new QStandardItem(QIcon("data/picture/additionally/processor.png"), prod));
+      ++rows;
     }
 }
