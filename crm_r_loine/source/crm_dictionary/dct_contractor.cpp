@@ -265,7 +265,14 @@ bool CContractorType::fillListSelectedRecord (QList<QString> &param)
         stored.setForwardOnly(true);
         stored = execStored(currentDatabase(), "ReadOnePartnerType", storageHashTable(list));
 
-        if (stored.numRowsAffected() > 0) {
+        bool empty(false);
+        while (stored.next()){
+            empty = true;
+        }
+
+        stored = execStored(currentDatabase(), "ReadOnePartnerType", storageHashTable(list));
+
+        if (empty) {
             while (stored.next()) {
                 const QString name = stored.value(stored.record().indexOf("part_name")).toString();
                 const bool  actual = stored.value(stored.record().indexOf("part_actual")).toBool();
@@ -326,7 +333,14 @@ void CContractorType::slotFindContractor(const QString &text)
         stored.setForwardOnly(true);
         stored = execStored(currentDatabase(), "FindPartnerType", storageHashTable(list));
 
-        if (stored.numRowsAffected() > 0) {
+        bool empty(false);
+        while (stored.next()){
+            empty = true;
+        }
+
+        stored = execStored(currentDatabase(), "FindPartnerType", storageHashTable(list));
+
+        if (empty) {
             fillContractorModel(stored);
         }
 

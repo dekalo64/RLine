@@ -231,7 +231,14 @@ bool CStatus::fillListSelectedRecord(QList<QString> &param)
         stored.setForwardOnly(true);
         stored = execStored(currentDatabase(), "ReadOneStatusType", storageHashTable(list));
 
-        if (stored.numRowsAffected() > 0) {
+        bool empty(false);
+        while (stored.next()){
+            empty = true;
+        }
+
+        stored = execStored(currentDatabase(), "ReadOneStatusType", storageHashTable(list));
+
+        if (empty) {
             while (stored.next()) {
                 const QString name = stored.value(stored.record().indexOf("st_name")).toString();
                 const bool  actual = stored.value(stored.record().indexOf("st_actual")).toBool();
@@ -327,7 +334,14 @@ void CStatus::slotFindStatus(const QString &text)
         stored.setForwardOnly(true);
         stored = execStored(currentDatabase(), "FindStatusType", storageHashTable(list));
 
-        if (stored.numRowsAffected() > 0) {
+        bool empty(false);
+        while (stored.next()){
+            empty = true;
+        }
+
+        stored = execStored(currentDatabase(), "FindStatusType", storageHashTable(list));
+
+        if (empty) {
             fillStatusModel(stored);
         }
 

@@ -232,7 +232,14 @@ bool CPositions::fillListSelectedRecord(QList<QString> &param)
         stored.setForwardOnly(true);
         stored = execStored(currentDatabase(), "ReadOnePosition", storageHashTable(list));
 
-        if (stored.numRowsAffected() > 0) {
+        bool empty(false);
+        while (stored.next()){
+            empty = true;
+        }
+
+        stored = execStored(currentDatabase(), "ReadOnePosition", storageHashTable(list));
+
+        if (empty) {
             while (stored.next()) {
                 const QString name = stored.value(stored.record().indexOf("pos_name")).toString();
                 const bool  actual = stored.value(stored.record().indexOf("pos_actual")).toBool();
@@ -328,7 +335,14 @@ void CPositions::slotFindPositions(const QString &text)
         stored.setForwardOnly(true);
         stored = execStored(currentDatabase(), "FindPositions", storageHashTable(list));
 
-        if (stored.numRowsAffected() > 0) {
+        bool empty(false);
+        while (stored.next()){
+            empty = true;
+        }
+
+        stored = execStored(currentDatabase(), "FindPositions", storageHashTable(list));
+
+        if (empty) {
             fillPositionsModel(stored);
         }
 

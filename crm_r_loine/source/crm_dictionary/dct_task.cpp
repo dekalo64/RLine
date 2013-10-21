@@ -233,7 +233,14 @@ bool CTaskType::fillListSelectedRecord(QList<QString> &param)
         stored.setForwardOnly(true);
         stored = execStored(currentDatabase(), "ReadOneTaskType", storageHashTable(list));
 
-        if (stored.numRowsAffected() > 0) {
+        bool empty(false);
+        while (stored.next()){
+            empty = true;
+        }
+
+        stored = execStored(currentDatabase(), "ReadOneTaskType", storageHashTable(list));
+
+        if (empty) {
             while (stored.next()) {
                 const QString name = stored.value(stored.record().indexOf("tt_name")).toString();
                 const bool  actual = stored.value(stored.record().indexOf("tt_actual")).toBool();
@@ -327,7 +334,14 @@ void CTaskType::slotFindTask(const QString &text)
         stored.setForwardOnly(true);
         stored = execStored(currentDatabase(), "FindTaskType", storageHashTable(list));
 
-        if (stored.numRowsAffected() > 0) {
+        bool empty(false);
+        while (stored.next()){
+            empty = true;
+        }
+
+        stored = execStored(currentDatabase(), "FindTaskType", storageHashTable(list));
+
+        if (empty) {
             fillTaskModel(stored);
         }
 

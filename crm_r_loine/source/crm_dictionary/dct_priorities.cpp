@@ -248,7 +248,14 @@ bool CPriorities::fillListSelectedRecord(QList<QString> &param)
         stored.setForwardOnly(true);
         stored = execStored(currentDatabase(), "ReadOnePriorityType", storageHashTable(list));
 
-        if (stored.numRowsAffected() > 0) {
+        bool empty(false);
+        while (stored.next()){
+            empty = true;
+        }
+
+        stored = execStored(currentDatabase(), "ReadOnePriorityType", storageHashTable(list));
+
+        if (empty) {
             while (stored.next()) {
                 const QString name = stored.value(stored.record().indexOf("pt_name")).toString();
                 const int    level = stored.value(stored.record().indexOf("pt_level")).toUInt();
@@ -344,7 +351,14 @@ void CPriorities::slotFindPriorities(const QString &text)
         stored.setForwardOnly(true);
         stored = execStored(currentDatabase(), "FindPriorityType", storageHashTable(list));
 
-        if (stored.numRowsAffected() > 0) {
+        bool empty(false);
+        while (stored.next()){
+            empty = true;
+        }
+
+        stored = execStored(currentDatabase(), "FindPriorityType", storageHashTable(list));
+
+        if (empty) {
             fillPrioritiesModel(stored);
         }
 

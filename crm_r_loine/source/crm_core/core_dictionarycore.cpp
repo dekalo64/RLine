@@ -50,6 +50,7 @@ QSqlQuery CDictionaryCore::execStored(const QSqlDatabase &database, const QStrin
                                            const QHash<QString, QVariant> &hash)
 {
     QSqlQuery stored(database);
+              stored.setForwardOnly(true);
 
     if (hash.isEmpty())
         stored.prepare(storedFunction);
