@@ -99,7 +99,6 @@ private:
     CCountryDialog   *countryDialog;
     CCityDialog      *cityDialog;
 
-
     QWidget          *focusedWidget;
 
     Action            act;

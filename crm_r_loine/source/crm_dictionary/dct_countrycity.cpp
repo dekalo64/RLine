@@ -701,7 +701,14 @@ bool CCountryCity::fillListSelectedRecord(QList<QString> &param)
             stored.setForwardOnly(true);
             stored = execStored(currentDatabase(), "ReadOneCountry", storageHashTable(list));
 
-            if (stored.numRowsAffected() > 0) {
+            bool empty(false);
+            while (stored.next()){
+                empty = true;
+            }
+
+            stored = execStored(currentDatabase(), "ReadOneCountry", storageHashTable(list));
+
+            if (empty) {
                 while (stored.next()) {
                     const QString namef  = stored.value(stored.record().indexOf("cty_name_first")).toString();
                     const QString namee  = stored.value(stored.record().indexOf("cty_name_second")).toString();
@@ -751,7 +758,14 @@ bool CCountryCity::fillListSelectedRecord(QList<QString> &param)
             stored.setForwardOnly(true);
             stored = execStored(currentDatabase(), "ReadOneCity", storageHashTable(list));
 
-            if (stored.numRowsAffected() > 0) {
+            bool empty(false);
+            while (stored.next()){
+                empty = true;
+            }
+
+            stored = execStored(currentDatabase(), "ReadOneCity", storageHashTable(list));
+
+            if (empty) {
                 while (stored.next()) {
 
                     const QString namecof  = stored.value(stored.record().indexOf("cty_name_first")).toString();
