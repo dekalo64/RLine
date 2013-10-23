@@ -6,5 +6,9 @@ int main(int argc, char *argv[])
     CLogisticApplication application(argc, argv);
     CLogisticMainWindow::instance();
 
+#if defined(Q_WS_MAC)
+    QApplication::setAttribute(Qt::AA_MacPluginApplication);
+#endif
+
     return application.exec();
 }
