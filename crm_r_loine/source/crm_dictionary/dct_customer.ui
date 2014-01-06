@@ -32,11 +32,6 @@
     <layout class="QHBoxLayout" name="hLayoutInformation">
      <item alignment="Qt::AlignLeft|Qt::AlignBottom">
       <widget class="QLabel" name="labelCurrentUser">
-       <property name="font">
-        <font>
-         <family>Arial</family>
-        </font>
-       </property>
        <property name="text">
         <string>TextLabel</string>
        </property>
@@ -44,11 +39,6 @@
      </item>
      <item alignment="Qt::AlignRight|Qt::AlignBottom">
       <widget class="QLabel" name="labelViewState">
-       <property name="font">
-        <font>
-         <family>Arial</family>
-        </font>
-       </property>
        <property name="text">
         <string>TextLabel</string>
        </property>

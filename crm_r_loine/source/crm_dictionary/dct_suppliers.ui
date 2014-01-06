@@ -26,7 +26,6 @@
       <widget class="QLabel" name="labelCurrentUser">
        <property name="font">
         <font>
-         <family>Arial</family>
          <weight>50</weight>
          <bold>false</bold>
         </font>
@@ -40,7 +39,6 @@
       <widget class="QLabel" name="labelViewState">
        <property name="font">
         <font>
-         <family>Arial</family>
          <weight>50</weight>
          <bold>false</bold>
         </font>

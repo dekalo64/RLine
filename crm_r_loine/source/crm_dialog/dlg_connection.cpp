@@ -8,6 +8,7 @@ ConnectionDialog::ConnectionDialog(QWidget *parent)
 {
     ui->setupUi(this);
 
+    setWindowTitle("Вход");
     setWindowFlags(Qt::Window | Qt::CustomizeWindowHint);
     setModal(true);
 

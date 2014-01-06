@@ -28,11 +28,6 @@
     <layout class="QHBoxLayout" name="hLayoutInformation">
      <item alignment="Qt::AlignLeft|Qt::AlignBottom">
       <widget class="QLabel" name="labelCurrentUser">
-       <property name="font">
-        <font>
-         <family>Arial</family>
-        </font>
-       </property>
        <property name="frameShape">
         <enum>QFrame::NoFrame</enum>
        </property>
@@ -48,11 +43,6 @@
          <width>16777215</width>
          <height>15</height>
         </size>
-       </property>
-       <property name="font">
-        <font>
-         <family>Arial</family>
-        </font>
        </property>
        <property name="frameShape">
         <enum>QFrame::NoFrame</enum>
